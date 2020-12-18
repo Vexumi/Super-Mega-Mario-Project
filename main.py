@@ -3,8 +3,6 @@ from pygame import *
 import os
 import sys
 
-file_dir = os.path.dirname(__file__)
-
 
 def loadimage(name, directory, colorkey=None):
     fullname = os.path.join(directory, name)
@@ -37,33 +35,24 @@ def generate_level(level):
                 Platform(x, y)
             elif level[y][x] == '@':
                 new_player = Player(x, y)
-    # вернем игрока, а также размер поля в клетках
     return new_player, x, y
 
 
-def camera_configure(camera, target_rect):
-    l, t, _, _ = target_rect
-    _, _, width, height = camera
-    l, t = -l + screen_width / 2, -t + screen_height / 2
+class Camera:
+    # зададим начальный сдвиг камеры
+    def __init__(self, level_width, level_height):
+        self.dx = 0
+        self.dy = 0
 
-    l = min(0, l)
-    l = max(-(camera.width - screen_width), l)
-    t = max(-(camera.height - screen_height), t)
-    t = min(0, t)
+    # сдвинуть объект obj на смещение камеры
+    def apply(self, obj):
+        obj.rect.x += self.dx
+        obj.rect.y += self.dy
 
-    return Rect(l, t, width, height)
-
-
-class Camera(object):
-    def __init__(self, camera_func, width, height):
-        self.camera_func = camera_func
-        self.state = Rect(0, 0, width, height)
-
-    def apply(self, target):
-        return target.rect.move(self.state.topleft)
-
+    # позиционировать камеру на объекте target
     def update(self, target):
-        self.state = self.camera_func(self.state, target.rect)
+        self.dx = -(target.rect.x + target.rect.w // 2 - width // 2)
+        self.dy = -(target.rect.y + target.rect.h // 2 - height // 2)
 
 
 class Player(pygame.sprite.Sprite):
@@ -71,26 +60,34 @@ class Player(pygame.sprite.Sprite):
         super().__init__(player_group, all_sprites)
         self.onGround = False
         self.jump_power = 10
-        self.jump_extra_power = 15
+        self.jump_extra_power = 1
         self.gravity = 0.35
         self.yvel = 0
         self.xvel = 0
-        self.player_speed = 10
+        self.player_speed = 6
+        self.player_speed_extra = 12
+        self.money = 0
 
         self.image = player_image
         self.rect = self.image.get_rect().move(
             platform_width * pos_x + 15, platform_height * pos_y + 5)
 
     def update(self, up, left, right, running):
-        if left:
-            self.xvel = -self.player_speed
-        if right:
-            self.xvel = self.player_speed
         if up:
-            if self.onGround:  # прыгаем, только когда можем оттолкнуться от земли
+            if self.onGround:
                 self.yvel = -self.jump_power
-                if running and (right or left):  # если есть ускорение и мы движемся
-                    self.yvel = -self.jump_extra_power  # то прыгаем выше
+                if running and (right or left):
+                    self.yvel = -self.jump_extra_power
+        if left:
+            if running:
+                self.xvel = -self.player_speed_extra
+            else:
+                self.xvel = -self.player_speed
+        if right:
+            if running:
+                self.xvel = self.player_speed_extra
+            else:
+                self.xvel = self.player_speed
         if not self.onGround:
             self.yvel += self.gravity
         if not (left or right):
@@ -107,18 +104,31 @@ class Player(pygame.sprite.Sprite):
         for platform in platforms:
             if pygame.sprite.collide_rect(self, platform):
                 if xvel > 0:
-                    self.rect.x += self.xvel
+                    self.rect.right = platform.rect.left
+
                 if xvel < 0:
-                    self.rect.x -= self.xvel
+                    self.rect.left = platform.rect.right
 
                 if yvel > 0:
-                    self.rect.y -= self.yvel
+                    self.rect.bottom = platform.rect.top
                     self.onGround = True
                     self.yvel = 0
 
                 if yvel < 0:
-                    self.rect.y += self.yvel
+                    self.rect.top = platform.rect.bottom
                     self.yvel = 0
+
+    def teleport(self, x, y):
+        self.rect.x = x
+        self.rect.y = y
+
+    def go_die(self):
+        if self.money >= 15:
+            self.money -= 15
+        else:
+            self.money = 0
+
+        self.teleport(startx, starty)
 
 
 class Platform(pygame.sprite.Sprite):
@@ -131,9 +141,7 @@ class Platform(pygame.sprite.Sprite):
 
 
 def main():
-    hero, x, y = generate_level(load_level('level_1.txt'))
-
-    left = right = False  # по умолчанию - стоим
+    left = right = False
     up = False
     running = False
 
@@ -164,10 +172,13 @@ def main():
             if event.type == KEYUP and event.key == K_LSHIFT:
                 running = False
         screen.fill((0, 0, 0))
+        camera.update(hero)
         hero.update(up, left, right, running)
         all_sprites.draw(screen)
+        for sprite in all_sprites:
+            camera.apply(sprite)
         clock.tick(fps)
-        pygame.display.flip()
+        pygame.display.update()
 
 
 screen_width = 800
@@ -175,7 +186,6 @@ screen_height = 640
 display = (screen_width, screen_height)
 background_color = "#000000"
 platforms = []
-level = []
 
 player_group = pygame.sprite.Group()
 player_image = loadimage('0.png', 'mario')
@@ -188,10 +198,17 @@ platform_height = 32
 
 if __name__ == "__main__":
     pygame.init()
-    pygame.display.set_caption('Перемещение героя')
+    pygame.display.set_caption('Mega Mario Boooooooooy')
     size = width, height = screen_width, screen_height
     screen = pygame.display.set_mode(size)
     screen.fill(pygame.Color('black'))
+
+    level = load_level('level_1.txt')
+    hero, startx, starty = generate_level(level)
+
+    level_width = platform_width * len(level[0])
+    level_height = platform_height * len(level)
+    camera = Camera(level_width, level_height)
 
     main()
     pygame.quit()
