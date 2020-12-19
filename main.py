@@ -1,9 +1,11 @@
+# импорт библиотек
 import pygame
 from pygame import *
 import os
 import sys
 
 
+# загрузка изображения спрайта
 def loadimage(name, directory, colorkey=None):
     fullname = os.path.join(directory, name)
     # если файл не существует, то выходим
@@ -14,6 +16,7 @@ def loadimage(name, directory, colorkey=None):
     return image
 
 
+# загрузка мира
 def load_level(filename):
     filename = "level_data/" + filename
     # читаем уровень, убирая символы перевода строки
@@ -27,17 +30,23 @@ def load_level(filename):
     return list(map(lambda x: x.ljust(max_width, '.'), level_map))
 
 
+# генерация мира
 def generate_level(level):
     new_player, x, y = None, None, None
     for y in range(len(level)):
         for x in range(len(level[y])):
             if level[y][x] == '#':
-                Platform(x, y)
+                Platform('wall', x, y)
             elif level[y][x] == '@':
                 new_player = Player(x, y)
+            elif level[y][x] == '-':
+                Platform('grass', x, y)
+            elif level[y][x] == '+':
+                Platform('underground', x, y)
     return new_player, x, y
 
 
+# класс камеры
 class Camera:
     # зададим начальный сдвиг камеры
     def __init__(self, level_width, level_height):
@@ -55,6 +64,7 @@ class Camera:
         self.dy = -(target.rect.y + target.rect.h // 2 - height // 2)
 
 
+# класс персонажа
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
         super().__init__(player_group, all_sprites)
@@ -100,6 +110,7 @@ class Player(pygame.sprite.Sprite):
         self.rect.x += self.xvel
         self.collide(self.xvel, 0)
 
+    # коллизия со стенками
     def collide(self, xvel, yvel):
         for platform in platforms:
             if pygame.sprite.collide_rect(self, platform):
@@ -118,10 +129,12 @@ class Player(pygame.sprite.Sprite):
                     self.rect.top = platform.rect.bottom
                     self.yvel = 0
 
+    # телепорт персонажей или врагов
     def teleport(self, x, y):
         self.rect.x = x
         self.rect.y = y
 
+    # смерть персонажа
     def go_die(self):
         if self.money >= 15:
             self.money -= 15
@@ -131,25 +144,30 @@ class Player(pygame.sprite.Sprite):
         self.teleport(startx, starty)
 
 
+# создание платформы для уровня
 class Platform(pygame.sprite.Sprite):
-    def __init__(self, pos_x, pos_y):
+    def __init__(self, type, pos_x, pos_y):
         super().__init__(platform_group, all_sprites)
-        self.image = platform_image
+        self.image = platform_image[type]
         self.rect = self.image.get_rect().move(
             platform_width * pos_x, platform_height * pos_y)
         platforms.append(self)
 
 
+# основная функция
 def main():
+    # переменные для определения передвижения персонажа
     left = right = False
     up = False
     running = False
 
+    # переменные дл управления игрой
     Exit = True
     speed = 1
     fps = 60
     clock = pygame.time.Clock()
 
+    # основной цикл
     while Exit:
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -181,31 +199,41 @@ def main():
         pygame.display.update()
 
 
+# переменные связанные с разрешением и pygame.screen
 screen_width = 800
 screen_height = 640
 display = (screen_width, screen_height)
 background_color = "#000000"
 platforms = []
 
+# player спрайт и группа
 player_group = pygame.sprite.Group()
 player_image = loadimage('0.png', 'mario')
 
+# переменные связанные с платформой и спрайтами
 platform_group = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
-platform_image = loadimage('platform.png', 'image_data')
+platform_image = {
+    'wall': loadimage('platform.png', 'image_data'),
+    'grass': loadimage('grass.png', 'image_data'),
+    'underground': loadimage('underground.png', 'image_data')
+}
 platform_width = 32
 platform_height = 32
 
 if __name__ == "__main__":
+    # инициализация игры
     pygame.init()
     pygame.display.set_caption('Mega Mario Boooooooooy')
     size = width, height = screen_width, screen_height
     screen = pygame.display.set_mode(size)
     screen.fill(pygame.Color('black'))
 
+    # переменные для уровня
     level = load_level('level_1.txt')
     hero, startx, starty = generate_level(level)
 
+    # переменные для камеры
     level_width = platform_width * len(level[0])
     level_height = platform_height * len(level)
     camera = Camera(level_width, level_height)
