@@ -3,6 +3,7 @@ import pygame
 from pygame import *
 import os
 import sys
+import pygame_gui
 
 
 # загрузка изображения спрайта
@@ -38,11 +39,13 @@ def generate_level(level):
             if level[y][x] == '#':
                 Platform('wall', x, y)
             elif level[y][x] == '@':
-                new_player = Player(x, y)
+                new_player = Player(x, y, 0)
             elif level[y][x] == '-':
                 Platform('grass', x, y)
             elif level[y][x] == '+':
                 Platform('underground', x, y)
+            elif level[y][x] == 'S':
+                Enemy('360_spike', x, y)
     return new_player, x, y
 
 
@@ -52,9 +55,10 @@ class Camera:
     def __init__(self, level_width, level_height):
         self.dx = 0
         self.dy = 0
+        self.world_offset = [0, 0]
 
     # сдвинуть объект obj на смещение камеры
-    def apply(self, obj):
+    def apply(self, obj, offset=False):
         obj.rect.x += self.dx
         obj.rect.y += self.dy
 
@@ -62,12 +66,16 @@ class Camera:
     def update(self, target):
         self.dx = -(target.rect.x + target.rect.w // 2 - width // 2)
         self.dy = -(target.rect.y + target.rect.h // 2 - height // 2)
+        self.world_offset[0] += -(target.rect.x + target.rect.w // 2 - width // 2)
+        self.world_offset[1] += -(target.rect.y + target.rect.h // 2 - height // 2)
 
 
 # класс персонажа
 class Player(pygame.sprite.Sprite):
-    def __init__(self, pos_x, pos_y):
+    def __init__(self, pos_x, pos_y, money):
         super().__init__(player_group, all_sprites)
+        self.startx = pos_x
+        self.starty = pos_y
         self.onGround = False
         self.jump_power = 10
         self.jump_extra_power = 1
@@ -129,10 +137,10 @@ class Player(pygame.sprite.Sprite):
                     self.rect.top = platform.rect.bottom
                     self.yvel = 0
 
-    # телепорт персонажей или врагов
+    # телепорт персонажа
     def teleport(self, x, y):
-        self.rect.x = x
-        self.rect.y = y
+        self.rect.x = x * 32
+        self.rect.y = y * 32
 
     # смерть персонажа
     def go_die(self):
@@ -140,8 +148,10 @@ class Player(pygame.sprite.Sprite):
             self.money -= 15
         else:
             self.money = 0
-
-        self.teleport(startx, starty)
+        self.xvel = 0
+        self.yvel = 0
+        global reset_game
+        reset_game = True
 
 
 # создание платформы для уровня
@@ -154,6 +164,31 @@ class Platform(pygame.sprite.Sprite):
         platforms.append(self)
 
 
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self, type, pos_x, pos_y):
+        super().__init__(enemies_group, all_sprites)
+        self.image = enemies_image[type]
+        self.rect = self.image.get_rect().move(
+            enemy_width * pos_x, enemy_height * pos_y)
+        enemies.append(self)
+
+    def update(self, *args):
+        if player_group.sprites()[0] in pygame.sprite.spritecollide(self, all_sprites, False):
+            hero.go_die()
+
+
+class Pause(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__(interface_group)
+        self.image = pygame.transform.scale(pause_image, (50, 50))
+        self.rect = self.image.get_rect()
+        interface.append(self)
+
+    def update(self, event):
+        if self.rect.collidepoint(event.pos):
+            print('pause')
+
+
 # основная функция
 def main():
     # переменные для определения передвижения персонажа
@@ -161,12 +196,12 @@ def main():
     up = False
     running = False
 
-    # переменные дл управления игрой
+    # переменные для управления игрой
     Exit = True
     speed = 1
     fps = 60
     clock = pygame.time.Clock()
-
+    pause = Pause()
     # основной цикл
     while Exit:
         for event in pygame.event.get():
@@ -189,14 +224,22 @@ def main():
                 right = False
             if event.type == KEYUP and event.key == K_LSHIFT:
                 running = False
-        screen.fill((0, 0, 0))
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    interface_group.update(event)
+        screen.fill(pygame.Color('#086FA1'))
         camera.update(hero)
         hero.update(up, left, right, running)
+        for i in enemies:
+            i.update()
         all_sprites.draw(screen)
         for sprite in all_sprites:
             camera.apply(sprite)
+        interface_group.draw(screen)
         clock.tick(fps)
         pygame.display.update()
+        if reset_game:
+            Exit = False
 
 
 # переменные связанные с разрешением и pygame.screen
@@ -204,15 +247,26 @@ screen_width = 800
 screen_height = 640
 display = (screen_width, screen_height)
 background_color = "#000000"
-platforms = []
 
-# player спрайт и группа
-player_group = pygame.sprite.Group()
+# интерфейс в игре
+pause_image = loadimage('pause.png', 'image_data')
+
+# инициализация игры
+pygame.init()
+pygame.display.set_caption('Mega Mario Boooooooooy')
+size = width, height = screen_width, screen_height
+screen = pygame.display.set_mode(size)
+screen.fill(pygame.Color('black'))
+
+# player
 player_image = loadimage('0.png', 'mario')
 
-# переменные связанные с платформой и спрайтами
-platform_group = pygame.sprite.Group()
-all_sprites = pygame.sprite.Group()
+# враг
+enemies_image = {'360_spike': loadimage('360_spike.png', 'image_data')}
+enemy_width = 32
+enemy_height = 32
+
+# платформа
 platform_image = {
     'wall': loadimage('platform.png', 'image_data'),
     'grass': loadimage('grass.png', 'image_data'),
@@ -221,22 +275,43 @@ platform_image = {
 platform_width = 32
 platform_height = 32
 
+
 if __name__ == "__main__":
-    # инициализация игры
-    pygame.init()
-    pygame.display.set_caption('Mega Mario Boooooooooy')
-    size = width, height = screen_width, screen_height
-    screen = pygame.display.set_mode(size)
-    screen.fill(pygame.Color('black'))
+    init = True
+    while init:
+        # переменная для переигрывания уровня
+        reset_game = False
+        # интерфейс
+        interface_group = pygame.sprite.Group()
+        interface = []
 
-    # переменные для уровня
-    level = load_level('level_1.txt')
-    hero, startx, starty = generate_level(level)
+        # player
+        player_group = pygame.sprite.Group()
 
-    # переменные для камеры
-    level_width = platform_width * len(level[0])
-    level_height = platform_height * len(level)
-    camera = Camera(level_width, level_height)
+        # враг
+        enemies = []
+        enemies_group = pygame.sprite.Group()
 
-    main()
+        # переменные связанные с платформой и спрайтами
+        platforms = []
+        platform_group = pygame.sprite.Group()
+        all_sprites = pygame.sprite.Group()
+
+        # переменные для уровня
+        level = load_level('level_1.txt')
+        hero, x, y = generate_level(level)
+
+        # переменные для камеры
+        level_width = platform_width * len(level[0])
+        level_height = platform_height * len(level)
+        camera = Camera(level_width, level_height)
+
+        main()
+
+        # переигрывание если True
+        if reset_game:
+            init = True
+        else:
+            init = False
+
     pygame.quit()
