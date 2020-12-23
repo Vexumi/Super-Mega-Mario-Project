@@ -35,11 +35,19 @@ def generate_level(level):
             if level[y][x] == '#':
                 Platform('wall', x, y)
             elif level[y][x] == '@':
-                new_player = Player(loadimage("idle_right.png", 'Sprites', (255, 255, 255)), 10, 1, x * platform_width, y * platform_height, money=100, hp=3)
+                if not(game_started):
+                    print('new player')
+                    new_player = Player(loadimage("idle_right.png", 'Sprites', (255, 255, 255)), 10, 1, x * platform_width, y * platform_height, money=0, hp=3)
+                else:
+                    print('old player')
+                    new_player = Player(loadimage("idle_right.png", 'Sprites', (255, 255, 255)), 10,
+                                        1, save_pos[0], save_pos[1], money=player_money, hp=player_hp)
             elif level[y][x] == '-':
                 Platform('grass', x, y)
             elif level[y][x] == '+':
                 Platform('underground', x, y)
             elif level[y][x] == 'S':
                 Enemy('360_spike', x, y)
+            elif level[y][x] == 'M':
+                Chest(x, y)
     return new_player, x, y

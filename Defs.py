@@ -26,3 +26,11 @@ def load_level(filename):
 
     # дополняем каждую строку пустыми клетками ('.')
     return list(map(lambda x: x.ljust(max_width, '.'), level_map))
+
+
+file = open('gamer.txt', mode='r', encoding='utf-8')
+data = file.readlines()
+data = [i.rstrip('\n') for i in data]
+for i in data:
+    exec(i)
+file.close()

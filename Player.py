@@ -1,4 +1,5 @@
 import pygame
+import random
 from Variables import *
 from Defs import *
 
@@ -15,7 +16,7 @@ class Player(pygame.sprite.Sprite):
     def __init__(self, sheet, columns, rows, pos_x, pos_y, money, hp):
         super().__init__(player_group, all_sprites)
         self.money = money
-        self.hp =hp
+        self.hp = hp
 
         self.init_physics(pos_x, pos_y)
 
@@ -103,7 +104,6 @@ class Player(pygame.sprite.Sprite):
                 self.anim_jump_changed = True
                 self.anim_run_changed = True
 
-
         self.onGround = False
 
         # смена анимации
@@ -161,7 +161,6 @@ class Player(pygame.sprite.Sprite):
                                     self.rect.x, self.rect.y)
                 self.now_animation = 'Down_right'
 
-
         # проверка правильности направления анимации
         if self.xvel != 0 and self.now_animation[0:4] == 'Idle' and -2 < self.yvel < 2:
             self.anim_run_changed = False
@@ -175,7 +174,6 @@ class Player(pygame.sprite.Sprite):
             self.anim_run_changed = False
         elif 0 > self.xvel and self.now_animation == 'Run_right' and -2 < self.yvel < 2:
             self.anim_run_changed = False
-
 
     # коллизия со стенками
     def collide(self, xvel, yvel):
@@ -234,3 +232,62 @@ class Enemy(pygame.sprite.Sprite):
         if player_group.sprites()[0] in pygame.sprite.spritecollide(self, all_sprites, False):
             for i in player_group:
                 i.go_die()
+
+
+class Chest(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__(chest_group, all_sprites)
+        self.chest_power = random.randint(0, 100)
+        self.closed = True
+
+        self.image = loadimage('chest_close.png', 'image_data')
+        self.rect = self.image.get_rect().move(
+            x * platform_width, y * platform_height)
+
+    def update(self, *args):
+        if self.closed and (
+                player_group.sprites()[0] in pygame.sprite.spritecollide(self, all_sprites, False)):
+            self.image = loadimage('chest_open.png', 'image_data')
+            self.closed = False
+            player_group.sprites()[0].money += self.chest_power
+            self.create_particles((self.rect.x, self.rect.y))
+
+    def create_particles(self, position):
+        # количество создаваемых частиц
+        particle_count = 20
+        # возможные скорости
+        numbers = range(-5, 6)
+        for _ in range(particle_count):
+            Particle(position, random.choice(numbers), random.choice(numbers))
+
+
+class Particle(pygame.sprite.Sprite):
+    screen_rect = (0, 0, screen_width, screen_height)
+    # сгенерируем частицы разного размера
+    fire = [loadimage("star.png", 'image_data')]
+    for scale in (5, 10, 20):
+        fire.append(pygame.transform.scale(fire[0], (scale, scale)))
+
+    def __init__(self, pos, dx, dy):
+        super().__init__(star_group)
+        self.image = random.choice(self.fire)
+        self.rect = self.image.get_rect()
+
+        # у каждой частицы своя скорость — это вектор
+        self.velocity = [dx, dy]
+        # и свои координаты
+        self.rect.x, self.rect.y = pos[0], pos[1] - 30
+
+        # гравитация будет одинаковой (значение константы)
+        self.gravity = -0.35
+
+    def update(self):
+        # применяем гравитационный эффект:
+        # движение с ускорением под действием гравитации
+        self.velocity[1] += self.gravity
+        # перемещаем частицу
+        self.rect.x += self.velocity[0]
+        self.rect.y += self.velocity[1]
+        # убиваем, если частица ушла за экран
+        if not self.rect.colliderect(self.screen_rect):
+            self.kill()

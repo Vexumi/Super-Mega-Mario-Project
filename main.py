@@ -4,18 +4,22 @@ from pygame import *
 import os
 import sys
 from Player import *
-from Defs import *
 from Variables import *
+from Defs import *
 from Platforms import *
 from Interface import *
 
 
 # отображение текста
-def displayText(text, color, size=50, pos=(100, 100)):
+def displayText(text, color, size=50, pos=(100, 100), flag=None):
     pygame.font.init()
     font = pygame.font.SysFont('Arial', size)
     textsurface = font.render(str(text), False, color)
     screen.blit(textsurface, pos)
+
+    if flag == '+coin':
+        coin = loadimage('coin.png', 'image_data')
+        screen.blit(coin, (screen_width - 35, 13))
 
 
 # класс камеры
@@ -41,6 +45,19 @@ class Camera:
         global_offset[1] += -(target.rect.y + target.rect.h // 2 - height // 2)
 
 
+# обновление всех спрайтов
+def update_sprites(up, left, right, running, background):
+    camera.update(hero)
+    hero.update(up, left, right, running)
+    for i in enemies:
+        i.update()
+    screen.blit(background, (0, 0))
+    chest_group.update()
+    star_group.update()
+    for sprite in all_sprites:
+        camera.apply(sprite)
+
+
 # основная функция
 def main():
     # переменные для определения передвижения персонажа
@@ -55,6 +72,11 @@ def main():
     clock = pygame.time.Clock()
     pause = Pause()
     hp_hero = View_hp_hero()
+    hp_hero.last_hp = True
+    hp_hero.update(None)
+    background = pygame.transform.scale(loadimage('bg_underground.png', 'image_data'),
+                                        (screen_width, screen_height))
+
     # основной цикл
     while Exit:
         for event in pygame.event.get():
@@ -80,32 +102,37 @@ def main():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     interface_group.update(event)
-        screen.fill(pygame.Color('#086FA1'))
-        camera.update(hero)
-        hero.update(up, left, right, running)
-        for i in enemies:
-            i.update()
-        all_sprites.draw(screen)
-        for sprite in all_sprites:
-            camera.apply(sprite)
+        # screen.fill(pygame.Color('#086FA1'))
+        update_sprites(up, left, right, running, background)
         hp_hero.update(None)
+        star_group.draw(screen)
+        all_sprites.draw(screen)
         interface_group.draw(screen)
-        displayText(hero.money, (0, 255, 255), 30, (screen_width - 70, 10))
+        displayText(hero.money, (0, 255, 255), 30, (screen_width - 70, 10), '+coin')
         clock.tick(fps)
         pygame.display.update()
-        if reset_game:
+
+        if hero.hp == 0:
             Exit = False
+            global reset_game
+            reset_game = True
 
 
 if __name__ == "__main__":
-    start_menu()
+    command = start_menu(game_started)
+    if command == 'New Game':
+        game_started = True
+        now_level = 'level_1'
+
 
     init = True
     while init:
+        init_variables()
+        init = False
         # переменная для переигрывания уровня
         reset_game = False
         # переменные для уровня
-        hero, x, y = generate_level(level)
+        hero, x, y = generate_level(load_level(now_level + '.txt'))
 
         # переменные для камеры
         camera = Camera(level_width, level_height)
@@ -113,9 +140,22 @@ if __name__ == "__main__":
         main()
 
         # переигрывание если True
-        if reset_game:
+        if reset_game: # TODO: перезапуск игры после смерти
             init = True
-        else:
-            init = False
 
     pygame.quit()
+
+    file = open('gamer.txt', mode='w', encoding='utf-8')
+    file.write('game_started = {}\n'
+               'now_level = "{}"\n'
+               'save_pos = {}\n'
+               'player_money = {}\n'
+               'player_hp = {}'.format(game_started, now_level, (hero.rect.x, hero.rect.y), hero.money, hero.hp))
+    file.close()
+
+
+#game_started = False
+#now_level = 'level_1'
+#save_pos = [None, None]
+#player_money = None
+#player_hp = None
