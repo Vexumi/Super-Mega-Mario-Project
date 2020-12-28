@@ -43,18 +43,9 @@ class Pause(pygame.sprite.Sprite):
             game_started = True
             command = start_menu(True)
             if command == 'New Game':
-                print('New Game Started from Pause')
-
-                global now_level
-                now_level = 'level_1'
-                game_started = True
-                file = open('gamer.txt', mode='w', encoding='utf-8')
-                file.write("game_started = False\nnow_level = 'level_1'\nplayer_money = None\nplayer_hp = None")
-                file.close()
-
-                for i in test():
-                    exec(i)
-                in_game = True
+                player_group.sprites()[0].money = 0
+                player_group.sprites()[0].go_die()
+                player_group.sprites()[0].hp = 3
 
 
 class Interface(pygame.sprite.Sprite):
@@ -63,13 +54,16 @@ class Interface(pygame.sprite.Sprite):
         self.type = type
         if self.type == 'Start':
             self.image = pygame.transform.scale(loadimage('play.png', 'image_data'), (150, 75))
-            self.rect = self.image.get_rect().move(int(screen_width / 2) - 75, int(screen_height / 2))
+            self.rect = self.image.get_rect().move(int(screen_width / 2) - 75,
+                                                   int(screen_height / 2))
         elif self.type == 'Exit':
             self.image = pygame.transform.scale(loadimage('exit.png', 'image_data'), (150, 75))
-            self.rect = self.image.get_rect().move(int(screen_width / 2) - 75, int(screen_height / 2) + 140)
+            self.rect = self.image.get_rect().move(int(screen_width / 2) - 75,
+                                                   int(screen_height / 2) + 140)
         elif self.type == 'New_game':
             self.image = pygame.transform.scale(loadimage('new game.png', 'image_data'), (150, 75))
-            self.rect = self.image.get_rect().move(int(screen_width / 2) - 75, int(screen_height / 2) + 75)
+            self.rect = self.image.get_rect().move(int(screen_width / 2) - 75,
+                                                   int(screen_height / 2) + 75)
         elif self.type == 'Settings':
             self.image = pygame.transform.scale(loadimage('settings.png', 'image_data'), (70, 70))
             self.rect = self.image.get_rect().move(screen_width - 75, screen_height - 75)
@@ -134,3 +128,35 @@ def start_menu(game_started):
         menu_interface_group.draw(screen_menu)
         pygame.display.flip()
         clock.tick(FPS)
+
+
+def died_screen():
+    size = screen_width, screen_height
+    screen_menu = pygame.display.set_mode(size)
+    screen_menu.fill((100, 100, 30))
+    fon = pygame.transform.scale(screen_menu, (screen_width, screen_height))
+    screen.blit(fon, (0, 0))
+
+    FPS = 30
+    clock = pygame.time.Clock()
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return
+            elif event.type == pygame.MOUSEBUTTONDOWN or event.type == pygame.KEYDOWN:
+                return
+        displayText('You Died :)', color=pygame.Color('red'), size=80, pos=(250, 250))
+        pygame.display.flip()
+        clock.tick(FPS)
+
+
+# отображение текста
+def displayText(text, color, size=50, pos=(100, 100), flag=None):
+    pygame.font.init()
+    font = pygame.font.SysFont('Arial', size)
+    textsurface = font.render(str(text), False, color)
+    screen.blit(textsurface, pos)
+
+    if flag == '+coin':
+        coin = loadimage('coin.png', 'image_data')
+        screen.blit(coin, (screen_width - 35, 13))

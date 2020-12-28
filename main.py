@@ -11,18 +11,6 @@ from Platforms import *
 from Interface import *
 
 
-# отображение текста
-def displayText(text, color, size=50, pos=(100, 100), flag=None):
-    pygame.font.init()
-    font = pygame.font.SysFont('Arial', size)
-    textsurface = font.render(str(text), False, color)
-    screen.blit(textsurface, pos)
-
-    if flag == '+coin':
-        coin = loadimage('coin.png', 'image_data')
-        screen.blit(coin, (screen_width - 35, 13))
-
-
 # класс камеры
 class Camera:
     # зададим начальный сдвиг камеры
@@ -126,7 +114,10 @@ def main():
         clock.tick(fps)
         pygame.display.update()
         if hero.hp == 0 or not is_hero_live:
-            Exit = False
+            died_screen()
+            hero.go_die()
+            hero.hp = 3
+            hero.money = 0
 
     file = open('gamer.txt', mode='w', encoding='utf-8')
     if hero.hp > 0:
@@ -158,6 +149,11 @@ if __name__ == "__main__":
 
     # переменные для уровня
     hero, x, y = generate_level(load_level(now_level + '.txt'))
+
+    if command == 'New Game':
+        hero.go_die()
+        hero.hp = 3
+        hero.money = 0
 
     # переменные для камеры
     camera = Camera(level_width, level_height)
