@@ -194,8 +194,7 @@ class Player(pygame.sprite.Sprite):
                     self.rect.top = platform.rect.bottom
                     self.yvel = 0
 
-        # телепорт персонажа
-
+    # телепорт персонажа
     def teleport(self, x, y):
         if self.money >= 15:
             self.money -= 15
@@ -204,8 +203,11 @@ class Player(pygame.sprite.Sprite):
 
         self.hp -= 1
         if self.hp < 0:
+            global is_hero_live
+            is_hero_live = False
             self.hp = 0
-            print('Already died')
+            self.money = 0
+            self.hp = 3
 
         self.rect.x = x * platform_width + global_offset[0]
         self.rect.y = y * platform_height + global_offset[1]
@@ -213,10 +215,9 @@ class Player(pygame.sprite.Sprite):
         self.xvel = 0
         self.yvel = 0
 
-        # смерть персонажа
-
+    # смерть персонажа
     def go_die(self):
-        self.teleport(13, 13)
+        self.teleport(int(self.startx / platform_width), int(self.starty / platform_height))
         pygame.time.wait(500)
 
 

@@ -38,9 +38,23 @@ class Pause(pygame.sprite.Sprite):
 
     def update(self, event):
         if self.rect.collidepoint(event.pos):
-            global game_started
+            global game_started, in_game
+            in_game = True
             game_started = True
-            start_menu(game_started)
+            command = start_menu(True)
+            if command == 'New Game':
+                print('New Game Started from Pause')
+
+                global now_level
+                now_level = 'level_1'
+                game_started = True
+                file = open('gamer.txt', mode='w', encoding='utf-8')
+                file.write("game_started = False\nnow_level = 'level_1'\nplayer_money = None\nplayer_hp = None")
+                file.close()
+
+                for i in test():
+                    exec(i)
+                in_game = True
 
 
 class Interface(pygame.sprite.Sprite):
@@ -89,23 +103,21 @@ def start_menu(game_started):
     Exit = Interface('Exit')
     Settings = Interface("Settings")
     Question = Interface('Question')
-    FPS = 60
+    FPS = 30
     clock = pygame.time.Clock()
     QUIT = False
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT or QUIT:
-                file = open('gamer.txt', mode='w', encoding='utf-8')
-                file.write('game_started = {}\n'
-                           'now_level = "{}"\n'
-                           'save_pos = {}\n'
-                           'player_money = {}\n'
-                           'player_hp = {}'.format(game_started, now_level,
-                                                   (player_group.sprites()[0].rect.x,
-                                                    player_group.sprites()[0].rect.y),
-                                                   player_group.sprites()[0].money,
-                                                   player_group.sprites()[0].hp))
-                file.close()
+                if game_started and in_game:
+                    file = open('gamer.txt', mode='w', encoding='utf-8')
+                    file.write('game_started = {}\n'
+                               'now_level = "{}"\n'
+                               'player_money = {}\n'
+                               'player_hp = {}'.format(game_started, now_level,
+                                                       player_group.sprites()[0].money,
+                                                       player_group.sprites()[0].hp))
+                    file.close()
                 pygame.quit()
                 sys.exit()
             elif event.type == pygame.MOUSEBUTTONDOWN:

@@ -34,3 +34,14 @@ data = [i.rstrip('\n') for i in data]
 for i in data:
     exec(i)
 file.close()
+
+def test():
+    a = []
+    file = open('gamer.txt', mode='r', encoding='utf-8')
+    data = file.readlines()
+    data = [i.rstrip('\n') for i in data]
+    for i in data:
+        a.append(i)
+    file.close()
+    return a
+

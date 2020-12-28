@@ -1,0 +1,34 @@
+all_sprites = pygame.sprite.Group()
+platforms = []
+
+screen_width = 800
+screen_height = 640
+display = (screen_width, screen_height)
+background_color = "#000000"
+
+pause_image = loadimage('pause.png', 'image_data')
+menu_interface = []
+menu_interface_group = pygame.sprite.Group()
+interface_group = pygame.sprite.Group()
+interface = []
+in_game = False
+
+pygame.init()
+pygame.display.set_caption('Mega Mario Boooooooooy')
+size = width, height = screen_width, screen_height
+screen = pygame.display.set_mode(size)
+screen.fill(pygame.Color('black'))
+now_level = None
+go_next_lvl = False
+is_hero_live = True
+
+enemies = []
+enemies_group = pygame.sprite.Group()
+
+platform_width = 32
+platform_height = 32
+global_offset = [0, 0]
+trigger_group = pygame.sprite.Group()
+
+chest_group = pygame.sprite.Group()
+star_group = pygame.sprite.Group()

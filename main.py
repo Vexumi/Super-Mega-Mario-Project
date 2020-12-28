@@ -1,5 +1,6 @@
 # импорт библиотек
 import pygame
+import importlib
 from pygame import *
 import os
 import sys
@@ -47,6 +48,7 @@ class Camera:
 
 # обновление всех спрайтов
 def update_sprites(up, left, right, running, background):
+    global hero, now_level, all_sprites, player_group, platforms, platform_group, x, y
     camera.update(hero)
     hero.update(up, left, right, running)
     for i in enemies:
@@ -56,6 +58,18 @@ def update_sprites(up, left, right, running, background):
     star_group.update()
     for sprite in all_sprites:
         camera.apply(sprite)
+    for sprite in platform_group:
+        camera.apply(sprite)
+    platform_group.draw(screen)
+    for event in trigger_group.sprites():  # TODO: смена уровня
+        if event.update(all_sprites) == 'New_level_triggered' and now_level != 'level_2':
+            all_sprites = pygame.sprite.Group()
+            player_group = pygame.sprite.Group()
+            platform_group = pygame.sprite.Group()
+            platforms = []
+            now_level = 'level_2'
+            hero, x, y = generate_level(load_level(now_level + '.txt'))
+            print('new level')
 
 
 # основная функция
@@ -111,51 +125,48 @@ def main():
         displayText(hero.money, (0, 255, 255), 30, (screen_width - 70, 10), '+coin')
         clock.tick(fps)
         pygame.display.update()
-
-        if hero.hp == 0:
+        if hero.hp == 0 or not is_hero_live:
             Exit = False
-            global reset_game
-            reset_game = True
+
+    file = open('gamer.txt', mode='w', encoding='utf-8')
+    if hero.hp > 0:
+        file.write('game_started = True\n'
+                   'now_level = "{}"\n'
+                   'player_money = {}\n'
+                   'player_hp = {}'.format(now_level, hero.money, hero.hp))
+    else:
+        file.write('game_started = False\n'
+                   'now_level = "level_1"\n'
+                   'player_money = 0\n'
+                   'player_hp = 3')
+    file.close()
+
+    return Exit
 
 
 if __name__ == "__main__":
+    in_game = False
     command = start_menu(game_started)
+
     if command == 'New Game':
-        game_started = True
-        now_level = 'level_1'
+        print('New Game Started')
+        game_started = False
+        now_level = "level_1"
+        player_money = 0
+        player_hp = 3
+        in_game = False
 
+    # переменные для уровня
+    hero, x, y = generate_level(load_level(now_level + '.txt'))
 
-    init = True
-    while init:
-        init_variables()
-        init = False
-        # переменная для переигрывания уровня
-        reset_game = False
-        # переменные для уровня
-        hero, x, y = generate_level(load_level(now_level + '.txt'))
+    # переменные для камеры
+    camera = Camera(level_width, level_height)
 
-        # переменные для камеры
-        camera = Camera(level_width, level_height)
-
-        main()
-
-        # переигрывание если True
-        if reset_game: # TODO: перезапуск игры после смерти
-            init = True
+    main()
 
     pygame.quit()
-
-    file = open('gamer.txt', mode='w', encoding='utf-8')
-    file.write('game_started = {}\n'
-               'now_level = "{}"\n'
-               'save_pos = {}\n'
-               'player_money = {}\n'
-               'player_hp = {}'.format(game_started, now_level, (hero.rect.x, hero.rect.y), hero.money, hero.hp))
-    file.close()
-
-
-#game_started = False
-#now_level = 'level_1'
-#save_pos = [None, None]
-#player_money = None
-#player_hp = None
+    sys.exit()
+game_started = False
+now_level = "level_1"
+player_money = 0
+player_hp = 3
