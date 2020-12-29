@@ -207,6 +207,7 @@ class Player(pygame.sprite.Sprite):
 
     # смерть персонажа
     def go_die(self):
+        Hit_sound.play()
         self.hp -= 1
 
         if self.money >= 15:
@@ -214,8 +215,8 @@ class Player(pygame.sprite.Sprite):
         else:
             self.money = 0
 
-        self.teleport(int(self.startx / platform_width), int(self.starty / platform_height))
         pygame.time.wait(500)
+        self.teleport(int(self.startx / platform_width), int(self.starty / platform_height))
 
 
 class Enemy(pygame.sprite.Sprite):
@@ -296,6 +297,7 @@ class Chest(pygame.sprite.Sprite):
     def update(self, *args):
         if self.closed and (
                 player_group.sprites()[0] in pygame.sprite.spritecollide(self, all_sprites, False)):
+            Chest_sound.play()
             self.image = loadimage('chest_open.png', 'image_data')
             self.closed = False
             player_group.sprites()[0].money += self.chest_power

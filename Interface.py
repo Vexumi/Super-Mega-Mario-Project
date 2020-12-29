@@ -38,6 +38,7 @@ class Pause(pygame.sprite.Sprite):
 
     def update(self, event):
         if self.rect.collidepoint(event.pos):
+            Pause_sound.play()
             global game_started, in_game
             in_game = True
             game_started = True
@@ -120,10 +121,14 @@ def start_menu(game_started):
                     for i in menu_interface:
                         command = i.update(event)
                         if command == 'Start':
+                            Play_sound.play()
                             return
                         elif command == 'New Game':
                             return 'New Game'
                         elif command == 'Exit':
+                            pygame.mixer.music.stop()
+                            Exit_sound.play()
+                            pygame.time.wait(80)
                             QUIT = True
         menu_interface_group.draw(screen_menu)
         pygame.display.flip()
@@ -131,6 +136,7 @@ def start_menu(game_started):
 
 
 def died_screen():
+    Dead_sound.play()
     size = screen_width, screen_height
     screen_menu = pygame.display.set_mode(size)
     screen_menu.fill((80, 75, 75))

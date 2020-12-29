@@ -1,5 +1,5 @@
 import pygame
-from Defs import loadimage
+from Defs import loadimage, load_music
 
 
 all_sprites = pygame.sprite.Group()
@@ -28,6 +28,23 @@ screen.fill(pygame.Color('black'))
 now_level = None
 go_next_lvl = False
 is_hero_live = True
+
+
+# Music and Sounds
+pygame.mixer.init()
+music = pygame.mixer.music.load(load_music('Race to Mars.mp3', 'sound_data'))
+#sound_hit = pygame.mixer.Sound('')
+pygame.mixer.music.set_volume(0.3)
+pygame.mixer.music.play(-1)
+
+Dead_sound = pygame.mixer.Sound(load_music('dead_sound.mp3', 'sound_data'))
+Jump_sound = pygame.mixer.Sound(load_music('jump_sound.mp3', 'sound_data'))
+Exit_sound = pygame.mixer.Sound(load_music('Exit_sound_2.mp3', 'sound_data'))
+Hit_sound = pygame.mixer.Sound(load_music('hit_sound.mp3', 'sound_data'))
+Pause_sound = pygame.mixer.Sound(load_music('pause_btn_sound.mp3', 'sound_data'))
+Play_sound = pygame.mixer.Sound(load_music('play btn sound.mp3', 'sound_data'))
+Checkpoint_sound = pygame.mixer.Sound(load_music('checkpoint_loaded_sound.mp3', 'sound_data'))
+Chest_sound = pygame.mixer.Sound(load_music('get_money_sound.mp3', 'sound_data'))
 
 # enemies
 enemies = []

@@ -28,12 +28,18 @@ def load_level(filename):
     return list(map(lambda x: x.ljust(max_width, '.'), level_map))
 
 
+def load_music(name, directory):
+    fullname = os.path.join(directory, name)
+    return fullname
+
+
 file = open('gamer.txt', mode='r', encoding='utf-8')
 data = file.readlines()
 data = [i.rstrip('\n') for i in data]
 for i in data:
     exec(i)
 file.close()
+
 
 def test():
     a = []
@@ -44,4 +50,3 @@ def test():
         a.append(i)
     file.close()
     return a
-
