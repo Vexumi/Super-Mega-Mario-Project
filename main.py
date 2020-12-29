@@ -58,6 +58,10 @@ def update_sprites(up, left, right, running, background):
             now_level = 'level_2'
             hero, x, y = generate_level(load_level(now_level + '.txt'))
             print('new level')
+    bullet_group.update()
+    for sprite in bullet_group:
+        camera.apply(sprite)
+    bullet_group.draw(screen)
 
 
 # основная функция
@@ -101,6 +105,7 @@ def main():
                 right = False
             if event.type == KEYUP and event.key == K_LSHIFT:
                 running = False
+
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     interface_group.update(event)

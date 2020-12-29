@@ -95,8 +95,8 @@ def start_menu(game_started):
         Start = Interface('Start')
     New_game = Interface('New_game')
     Exit = Interface('Exit')
-    Settings = Interface("Settings")
-    Question = Interface('Question')
+    #Settings = Interface("Settings")
+    #Question = Interface('Question')
     FPS = 30
     clock = pygame.time.Clock()
     QUIT = False
@@ -133,7 +133,7 @@ def start_menu(game_started):
 def died_screen():
     size = screen_width, screen_height
     screen_menu = pygame.display.set_mode(size)
-    screen_menu.fill((100, 100, 30))
+    screen_menu.fill((80, 75, 75))
     fon = pygame.transform.scale(screen_menu, (screen_width, screen_height))
     screen.blit(fon, (0, 0))
 
@@ -145,7 +145,9 @@ def died_screen():
                 return
             elif event.type == pygame.MOUSEBUTTONDOWN or event.type == pygame.KEYDOWN:
                 return
-        displayText('You Died :)', color=pygame.Color('red'), size=80, pos=(250, 250))
+        displayText('You Died', color=pygame.Color('red'), size=80,
+                    pos=(int(screen_width / 2) - 130, int(screen_height / 2) - 100))
+        displayText('|Press any key|', color=pygame.Color('red'), size=20, pos=(335, 450))
         pygame.display.flip()
         clock.tick(FPS)
 

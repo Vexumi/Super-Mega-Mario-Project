@@ -14,9 +14,6 @@ level = load_level('level_1.txt')
 level_width = platform_width * len(level[0])
 level_height = platform_height * len(level)
 
-# переменные связанные с платформой и спрайтами
-platform_group = pygame.sprite.Group()
-
 
 # создание платформы для уровня
 class Platform(pygame.sprite.Sprite):
@@ -43,18 +40,28 @@ def generate_level(level):
                 else:
                     print('old player')
                     new_player = Player(loadimage("idle_right.png", 'Sprites', (255, 255, 255)), 10,
-                                        1, x * platform_width, y * platform_height, money=player_money,
+                                        1, x * platform_width, y * platform_height,
+                                        money=player_money,
                                         hp=player_hp)
             elif level[y][x] == '-':
                 Platform('grass', x, y)
             elif level[y][x] == '+':
                 Platform('underground', x, y)
-            elif level[y][x] == 'S':
+            elif level[y][x] == 'O':
                 Enemy('360_spike', x, y)
+            elif level[y][x] == 'L':
+                Enemy('Shoot_monster', x, y, 'Left')
+            elif level[y][x] == 'R':
+                Enemy('Shoot_monster', x, y, 'Right')
+            elif level[y][x] == 'U':
+                Enemy('Shoot_monster', x, y, 'Up')
+            elif level[y][x] == 'D':
+                Enemy('Shoot_monster', x, y, 'Down')
             elif level[y][x] == 'M':
                 Chest(x, y)
-            elif level[y][x] == 'L':
-                Trigger(x, y, platform_width, platform_height, 'New_level_triggered') # триггер для смены уровня
+            elif level[y][x] == 'T':
+                Trigger(x, y, platform_width, platform_height,
+                        'New_level_triggered')  # триггер для смены уровня
 
     return new_player, x, y
 

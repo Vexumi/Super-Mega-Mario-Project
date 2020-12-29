@@ -6,7 +6,9 @@ from Defs import *
 player_group = pygame.sprite.Group()
 
 # враг
-enemies_image = {'360_spike': loadimage('360_spike.png', 'image_data')}
+enemies_image = {'360_spike': loadimage('360_spike.png', 'image_data'),
+                 'Shoot_monster': pygame.transform.scale(loadimage('void.png', 'image_data'),
+                                                         (32, 32))}
 enemy_width = 32
 enemy_height = 32
 
@@ -67,6 +69,7 @@ class Player(pygame.sprite.Sprite):
             self.iter = 0
         else:
             self.iter += 1
+
         if up:
             if self.onGround:
                 self.yvel = -self.jump_power
@@ -97,7 +100,7 @@ class Player(pygame.sprite.Sprite):
         if not self.onGround:
             self.yvel += self.gravity
 
-        if not (left or right) or right and left:
+        if not (left or right) or (right and left):
             self.xvel = 0
             if not (self.anim_idle_changed):
                 self.anim_idle_changed = False
@@ -216,17 +219,68 @@ class Player(pygame.sprite.Sprite):
 
 
 class Enemy(pygame.sprite.Sprite):
-    def __init__(self, type, pos_x, pos_y):
+    def __init__(self, type, pos_x, pos_y, bullet_dur=None):
         super().__init__(enemies_group, all_sprites)
         self.image = enemies_image[type]
         self.rect = self.image.get_rect().move(
             enemy_width * pos_x, enemy_height * pos_y)
         enemies.append(self)
+        self.type = type
+        self.iter = 0
+        self.bullet_dur = bullet_dur
+        self.bullets = []
+        self.pos = [pos_x, pos_y]
 
     def update(self, *args):
         if player_group.sprites()[0] in pygame.sprite.spritecollide(self, all_sprites, False):
             for i in player_group:
                 i.go_die()
+
+        if self.type == 'Shoot_monster':
+            if self.iter == 120:
+                self.shoot()
+                self.iter = 0
+            else:
+                self.iter += 1
+        for bullet in self.bullets:
+            if bullet.update() == 'died':
+                del self.bullets[self.bullets.index(bullet)]
+
+    def shoot(self):
+        self.bullets.append(
+            Bullet(self.bullet_dur, int(self.rect.x / platform_width),
+                   int(self.rect.y / platform_height)))
+
+
+class Bullet(pygame.sprite.Sprite):
+    def __init__(self, bullet_dur, pos_x, pos_y):
+        super().__init__(bullet_group)
+        self.bullet_dur = bullet_dur
+        self.bullet_speed = 4
+        self.image = pygame.transform.scale(loadimage('bullet.png', 'image_data'), (10, 10))
+        self.rect = self.image.get_rect().move(pos_x * 32 + 35, pos_y * 32 + 35)
+
+    def update(self):
+        if self.bullet_dur == 'Up':
+            self.rect.y -= self.bullet_speed
+        elif self.bullet_dur == 'Down':
+            self.rect.y += self.bullet_speed
+        elif self.bullet_dur == 'Left':
+            self.rect.x -= self.bullet_speed
+        elif self.bullet_dur == 'Right':
+            self.rect.x += self.bullet_speed
+        return self.collision()
+
+    def collision(self):
+        # пуля пропадает и человек получает урон после соприкосновения
+        if player_group.sprites()[0] in pygame.sprite.spritecollide(self, player_group, False):
+            self.kill()
+            player_group.sprites()[0].go_die()
+            return 'died'
+        # пуля пропадает после столкновения с препятствиями
+        if pygame.sprite.spritecollide(self, platform_group, False):
+            self.kill()
+            return 'died'
 
 
 class Chest(pygame.sprite.Sprite):

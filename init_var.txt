@@ -24,6 +24,9 @@ is_hero_live = True
 
 enemies = []
 enemies_group = pygame.sprite.Group()
+bullet_group = pygame.sprite.Group()
+
+platform_group = pygame.sprite.Group()
 
 platform_width = 32
 platform_height = 32
