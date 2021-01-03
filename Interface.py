@@ -13,6 +13,7 @@ class View_hp_hero(pygame.sprite.Sprite):
         self.rect.x = screen_width - 20
         self.rect.y = screen_height - 20
         interface.append(self)
+        self.type = 'Hp_hero'
 
     def update(self, event):
         hp = player_group.sprites()[0].hp
@@ -29,14 +30,17 @@ class View_hp_hero(pygame.sprite.Sprite):
         self.rect.y = screen_height - 60
 
 
+# класс паузы в игре
 class Pause(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__(interface_group)
         self.image = pygame.transform.scale(pause_image, (50, 50))
         self.rect = self.image.get_rect()
         interface.append(self)
+        self.type = 'Pause'
 
     def update(self, event):
+        global winner
         if self.rect.collidepoint(event.pos):
             Pause_sound.play()
             global game_started, in_game
@@ -49,6 +53,7 @@ class Pause(pygame.sprite.Sprite):
                 player_group.sprites()[0].hp = 3
 
 
+# класс создания кнопок в интерфейсе
 class Interface(pygame.sprite.Sprite):
     def __init__(self, type):
         super().__init__(menu_interface_group)
@@ -85,7 +90,11 @@ class Interface(pygame.sprite.Sprite):
             return 'New Game'
 
 
+# загрузочный экран
 def start_menu(game_started):
+    global interface_group
+    for sprite in menu_interface_group.sprites():
+        sprite.kill()
     size = screen_width, screen_height
     screen_menu = pygame.display.set_mode(size)
     screen_menu.fill((0, 100, 100))
@@ -96,8 +105,8 @@ def start_menu(game_started):
         Start = Interface('Start')
     New_game = Interface('New_game')
     Exit = Interface('Exit')
-    #Settings = Interface("Settings")
-    #Question = Interface('Question')
+    # Settings = Interface("Settings")
+    # Question = Interface('Question')
     FPS = 30
     clock = pygame.time.Clock()
     QUIT = False
@@ -124,6 +133,10 @@ def start_menu(game_started):
                             Play_sound.play()
                             return
                         elif command == 'New Game':
+                            for chest in chest_group.sprites():
+                                chest.close_chest()
+                            for queen in queen_group:
+                                queen.founded = False
                             return 'New Game'
                         elif command == 'Exit':
                             pygame.mixer.music.stop()
@@ -135,6 +148,7 @@ def start_menu(game_started):
         clock.tick(FPS)
 
 
+# экран смерти
 def died_screen():
     Dead_sound.play()
     size = screen_width, screen_height
@@ -153,7 +167,39 @@ def died_screen():
                 return
         displayText('You Died', color=pygame.Color('red'), size=80,
                     pos=(int(screen_width / 2) - 130, int(screen_height / 2) - 100))
-        displayText('|Press any key|', color=pygame.Color('red'), size=20, pos=(335, 450))
+        displayText('|Press any key|', color=pygame.Color('red'), size=20,
+                    pos=(int(screen_width / 2) - 60, int(screen_height / 2) + 100))
+        pygame.display.flip()
+        clock.tick(FPS)
+
+
+def winner_screen():
+    Win_sound.play()
+    pygame.mixer.music.pause()
+    size = screen_width, screen_height
+    screen_menu = pygame.display.set_mode(size)
+    screen_menu.fill((50, 150, 130))
+    fon = pygame.transform.scale(screen_menu, (screen_width, screen_height))
+    screen.blit(fon, (0, 0))
+
+    FPS = 30
+    clock = pygame.time.Clock()
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.mixer.music.unpause()
+                Win_sound.stop()
+                return
+            elif event.type == pygame.MOUSEBUTTONDOWN or event.type == pygame.KEYDOWN:
+                pygame.mixer.music.unpause()
+                Win_sound.stop()
+                return
+        displayText('You Win!', color=pygame.Color('blue'), size=80,
+                    pos=(int(screen_width / 2) - 130, int(screen_height / 2) - 100))
+        displayText('Your score: {}'.format(player_group.sprites()[0].money),
+                    color=pygame.Color("green"), size=40,
+                    pos=(int(screen_width / 2) - 110, int(screen_height / 2) + 50))
+        displayText('|Press any key|', color=pygame.Color('blue'), size=20, pos=(335, 450))
         pygame.display.flip()
         clock.tick(FPS)
 
@@ -164,7 +210,7 @@ def displayText(text, color, size=50, pos=(100, 100), flag=None):
     font = pygame.font.SysFont('Arial', size)
     textsurface = font.render(str(text), False, color)
     screen.blit(textsurface, pos)
-
+    # отображение счетчика монет есть есть флаг "+coin"
     if flag == '+coin':
         coin = loadimage('coin.png', 'image_data')
         screen.blit(coin, (screen_width - 35, 13))

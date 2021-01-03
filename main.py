@@ -37,6 +37,14 @@ class Camera:
 # обновление всех спрайтов
 def update_sprites(up, left, right, running, background):
     global hero, now_level, all_sprites, player_group, platforms, platform_group, x, y
+    if hero.winner:
+        winner_screen()
+        command = start_menu(False)
+        if command == 'New Game':
+            hero.money = 0
+            hero.go_die()
+            hero.hp = 3
+        hero.winner = False
     camera.update(hero)
     hero.update(up, left, right, running)
     for i in enemies:
@@ -48,6 +56,12 @@ def update_sprites(up, left, right, running, background):
         camera.apply(sprite)
     for sprite in platform_group:
         camera.apply(sprite)
+    for sprite in queen_group:
+        camera.apply(sprite)
+        sprite.update()
+    for sprite in secret_group:
+        camera.apply(sprite)
+        sprite.update()
     platform_group.draw(screen)
     for event in trigger_group.sprites():  # TODO: смена уровня
         if event.update(all_sprites) == 'New_level_triggered' and now_level != 'level_2':
@@ -57,7 +71,6 @@ def update_sprites(up, left, right, running, background):
             platforms = []
             now_level = 'level_2'
             hero, x, y = generate_level(load_level(now_level + '.txt'))
-            print('new level')
     bullet_group.update()
     for sprite in bullet_group:
         camera.apply(sprite)
@@ -88,20 +101,20 @@ def main():
         for event in pygame.event.get():
             if event.type == QUIT:
                 Exit = False
-            if event.type == KEYDOWN and event.key == K_UP:
+            if event.type == KEYDOWN and (event.key == K_UP or event.key == K_w):
                 up = True
-            if event.type == KEYDOWN and event.key == K_LEFT:
+            if event.type == KEYDOWN and (event.key == K_LEFT or event.key == K_a):
                 left = True
-            if event.type == KEYDOWN and event.key == K_RIGHT:
+            if event.type == KEYDOWN and (event.key == K_RIGHT or event.key == K_d):
                 right = True
             if event.type == KEYDOWN and event.key == K_LSHIFT:
                 running = True
 
-            if event.type == KEYUP and event.key == K_UP:
+            if event.type == KEYUP and (event.key == K_UP or event.key == K_w):
                 up = False
-            if event.type == KEYUP and event.key == K_LEFT:
+            if event.type == KEYUP and (event.key == K_LEFT or event.key == K_a):
                 left = False
-            if event.type == KEYUP and event.key == K_RIGHT:
+            if event.type == KEYUP and (event.key == K_RIGHT or event.key == K_d):
                 right = False
             if event.type == KEYUP and event.key == K_LSHIFT:
                 running = False
@@ -109,11 +122,13 @@ def main():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     interface_group.update(event)
-        # screen.fill(pygame.Color('#086FA1'))
         update_sprites(up, left, right, running, background)
         hp_hero.update(None)
         star_group.draw(screen)
         all_sprites.draw(screen)
+        queen_group.draw(screen)
+        secret_group.draw(screen)
+        player_group.draw(screen)
         interface_group.draw(screen)
         displayText(hero.money, (0, 255, 255), 30, (screen_width - 70, 10), '+coin')
         clock.tick(fps)
@@ -140,6 +155,7 @@ def main():
     return Exit
 
 
+# старт игры
 if __name__ == "__main__":
     in_game = False
     command = start_menu(game_started)

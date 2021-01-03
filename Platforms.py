@@ -3,13 +3,14 @@ from Defs import loadimage, load_level
 from Variables import *
 from Player import *
 
-# платформа
+# спрайты платформ
 platform_image = {
     'wall': loadimage('platform.png', 'image_data'),
     'grass': loadimage('grass.png', 'image_data'),
     'underground': loadimage('underground.png', 'image_data')
 }
 
+# уровень и переменные для него
 level = load_level('level_1.txt')
 level_width = platform_width * len(level[0])
 level_height = platform_height * len(level)
@@ -30,42 +31,45 @@ def generate_level(level):
     new_player, x, y = None, None, None
     for y in range(len(level)):
         for x in range(len(level[y])):
-            if level[y][x] == '#':
+            if level[y][x] == '#':  # создание кирпичного блока
                 Platform('wall', x, y)
-            elif level[y][x] == '@':
+            elif level[y][x] == '@':  # создание персонажа
                 if not (game_started):
-                    print('new player')
                     new_player = Player(loadimage("idle_right.png", 'Sprites', (255, 255, 255)), 10,
                                         1, x * platform_width, y * platform_height, money=0, hp=3)
                 else:
-                    print('old player')
                     new_player = Player(loadimage("idle_right.png", 'Sprites', (255, 255, 255)), 10,
                                         1, x * platform_width, y * platform_height,
                                         money=player_money,
                                         hp=player_hp)
-            elif level[y][x] == '-':
+            elif level[y][x] == '-':  # создание блока травы
                 Platform('grass', x, y)
-            elif level[y][x] == '+':
+            elif level[y][x] == '+':  # создание блока земли
                 Platform('underground', x, y)
-            elif level[y][x] == 'O':
+            elif level[y][x] == 'O':  # создание шипов направленных во все стороны
                 Enemy('360_spike', x, y)
-            elif level[y][x] == 'L':
-                Enemy('Shoot_monster', x, y, 'Left')
-            elif level[y][x] == 'R':
-                Enemy('Shoot_monster', x, y, 'Right')
-            elif level[y][x] == 'U':
-                Enemy('Shoot_monster', x, y, 'Up')
-            elif level[y][x] == 'D':
-                Enemy('Shoot_monster', x, y, 'Down')
-            elif level[y][x] == 'M':
+            elif level[y][x] == 'L':  # создание стреляющего монстра влево
+                Enemy('Shoot_monster_left', x, y, 'Left')
+            elif level[y][x] == 'R':  # создание стреляющего монстра вправо
+                Enemy('Shoot_monster_right', x, y, 'Right')
+            elif level[y][x] == 'U':  # создание стреляющего монстра вверх
+                Enemy('Shoot_monster_up', x, y, 'Up')
+            elif level[y][x] == 'D':  # создание стреляющего монстра вниз
+                Enemy('Shoot_monster_down', x, y, 'Down')
+            elif level[y][x] == 'C':  # создание сундука
                 Chest(x, y)
             elif level[y][x] == 'T':
                 Trigger(x, y, platform_width, platform_height,
                         'New_level_triggered')  # триггер для смены уровня
+            elif level[y][x] == 'Q': # создание принцессы
+                Queen(x, y)
+            elif level[y][x] == 'B':
+                Secret(x, y)
 
     return new_player, x, y
 
 
+# класс триггера
 class Trigger(pygame.sprite.Sprite):
     def __init__(self, x, y, width, height, returned_trigger='Triggered'):
         super().__init__(all_sprites, trigger_group)

@@ -1,7 +1,6 @@
 import pygame
 from Defs import loadimage, load_music
 
-
 all_sprites = pygame.sprite.Group()
 platforms = []
 
@@ -29,11 +28,9 @@ now_level = None
 go_next_lvl = False
 is_hero_live = True
 
-
 # Music and Sounds
 pygame.mixer.init()
 music = pygame.mixer.music.load(load_music('Race to Mars.mp3', 'sound_data'))
-#sound_hit = pygame.mixer.Sound('')
 pygame.mixer.music.set_volume(0.3)
 pygame.mixer.music.play(-1)
 
@@ -45,23 +42,35 @@ Pause_sound = pygame.mixer.Sound(load_music('pause_btn_sound.mp3', 'sound_data')
 Play_sound = pygame.mixer.Sound(load_music('play btn sound.mp3', 'sound_data'))
 Checkpoint_sound = pygame.mixer.Sound(load_music('checkpoint_loaded_sound.mp3', 'sound_data'))
 Chest_sound = pygame.mixer.Sound(load_music('get_money_sound.mp3', 'sound_data'))
+Batman_sound = pygame.mixer.Sound(load_music('batman.mp3', 'sound_data'))
+Win_sound = pygame.mixer.Sound(load_music('win_sound.mp3', 'sound_data'))
 
 # enemies
 enemies = []
 enemies_group = pygame.sprite.Group()
 bullet_group = pygame.sprite.Group()
 
+# queen group
+queen_group = pygame.sprite.Group()
+
+secret_group = pygame.sprite.Group()
+
 # переменные связанные с платформой и спрайтами
 platform_group = pygame.sprite.Group()
+
 # платформы
 platform_width = 32
 platform_height = 32
 global_offset = [0, 0]
 trigger_group = pygame.sprite.Group()
 
+# winner
+winner = False
+
 # сундук
 chest_group = pygame.sprite.Group()
 star_group = pygame.sprite.Group()
+
 
 def init_vars_def():
     a = []
@@ -72,4 +81,3 @@ def init_vars_def():
         a.append(i)
     file.close()
     return a
-

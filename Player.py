@@ -7,8 +7,15 @@ player_group = pygame.sprite.Group()
 
 # враг
 enemies_image = {'360_spike': loadimage('360_spike.png', 'image_data'),
-                 'Shoot_monster': pygame.transform.scale(loadimage('void.png', 'image_data'),
-                                                         (32, 32))}
+                 'Shoot_monster_down': pygame.transform.scale(
+                     loadimage('shoot_monster_down.png', 'image_data'),
+                     (32, 32)),
+                 'Shoot_monster_up': pygame.transform.scale(
+                     loadimage('shoot_monster_up.png', 'image_data'), (32, 32)),
+                 'Shoot_monster_left': pygame.transform.scale(
+                     loadimage('shoot_monster_left.png', 'image_data'), (32, 32)),
+                 'Shoot_monster_right': pygame.transform.scale(
+                     loadimage('shoot_monster_right.png', 'image_data'), (32, 32))}
 enemy_width = 32
 enemy_height = 32
 
@@ -19,9 +26,12 @@ class Player(pygame.sprite.Sprite):
         super().__init__(player_group, all_sprites)
         self.money = money
         self.hp = hp
+        self.winner = False
 
+        # инициализация физики персонажа
         self.init_physics(pos_x, pos_y)
 
+        # инициализация анимации
         self.init_animation(sheet, columns, rows, pos_x, pos_y)
 
     def init_physics(self, pos_x, pos_y):
@@ -54,6 +64,7 @@ class Player(pygame.sprite.Sprite):
         self.anim_jump_changed = True
         self.now_animation = 'Idle_right'
 
+    # разрезка анимации кадров
     def cut_sheet(self, sheet, columns, rows):
         self.rect = pygame.Rect(0, 0, sheet.get_width() // columns,
                                 sheet.get_height() // rows)
@@ -109,9 +120,6 @@ class Player(pygame.sprite.Sprite):
 
         self.onGround = False
 
-        # смена анимации
-        self.change_animation()
-
         # проверка коллизии
         self.rect.y += self.yvel
         self.collide(0, self.yvel)
@@ -121,6 +129,9 @@ class Player(pygame.sprite.Sprite):
         self.collide(self.xvel, 0)
 
         self.last_yvel = self.yvel
+
+        # смена анимации
+        self.change_animation()
 
     def change_animation(self):
         # смена анимации
@@ -165,17 +176,21 @@ class Player(pygame.sprite.Sprite):
                 self.now_animation = 'Down_right'
 
         # проверка правильности направления анимации
-        if self.xvel != 0 and self.now_animation[0:4] == 'Idle' and -2 < self.yvel < 2:
+        if self.xvel != 0 and self.now_animation[0:4] == 'Idle' and (
+                -2 < self.yvel < 2 or self.onGround):
             self.anim_run_changed = False
-        elif self.xvel == 0 and self.now_animation[0:4] != 'Idle' and -2 < self.yvel < 2:
+        elif self.xvel == 0 and self.now_animation[0:4] != 'Idle' and (
+                -2 < self.yvel < 2 or self.onGround):
             self.anim_idle_changed = False
         if self.yvel < 2 and self.now_animation[0:4] != 'Jump':
             self.anim_jump_changed = False
         elif self.yvel > -2 and self.now_animation[0:4] != 'Down':
             self.anim_jump_changed = False
-        if 0 < self.xvel and self.now_animation == 'Run_left' and -2 < self.yvel < 2:
+        if 0 < self.xvel and self.now_animation == 'Run_left' and (
+                -2 < self.yvel < 2 or self.onGround):
             self.anim_run_changed = False
-        elif 0 > self.xvel and self.now_animation == 'Run_right' and -2 < self.yvel < 2:
+        elif 0 > self.xvel and self.now_animation == 'Run_right' and (
+                -2 < self.yvel < 2 or self.onGround):
             self.anim_run_changed = False
 
     # коллизия со стенками
@@ -219,6 +234,7 @@ class Player(pygame.sprite.Sprite):
         self.teleport(int(self.startx / platform_width), int(self.starty / platform_height))
 
 
+# класс врагов
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, type, pos_x, pos_y, bullet_dur=None):
         super().__init__(enemies_group, all_sprites)
@@ -237,7 +253,7 @@ class Enemy(pygame.sprite.Sprite):
             for i in player_group:
                 i.go_die()
 
-        if self.type == 'Shoot_monster':
+        if 'Shoot_monster' in self.type:
             if self.iter == 120:
                 self.shoot()
                 self.iter = 0
@@ -253,6 +269,7 @@ class Enemy(pygame.sprite.Sprite):
                    int(self.rect.y / platform_height)))
 
 
+# пуля летящая из стреляющих врагов
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, bullet_dur, pos_x, pos_y):
         super().__init__(bullet_group)
@@ -284,12 +301,13 @@ class Bullet(pygame.sprite.Sprite):
             return 'died'
 
 
+# класс для создания сундука с монетами
 class Chest(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__(chest_group, all_sprites)
         self.chest_power = random.randint(0, 100)
         self.closed = True
-
+        self.pos = (x, y)
         self.image = loadimage('chest_close.png', 'image_data')
         self.rect = self.image.get_rect().move(
             x * platform_width, y * platform_height)
@@ -311,7 +329,14 @@ class Chest(pygame.sprite.Sprite):
         for _ in range(particle_count):
             Particle(position, random.choice(numbers), random.choice(numbers))
 
+    # закрытие сундука
+    def close_chest(self):
+        self.closed = True
+        self.chest_power = random.randint(0, 100)
+        self.image = loadimage('chest_close.png', 'image_data')
 
+
+# частицы для сундука при открытии
 class Particle(pygame.sprite.Sprite):
     screen_rect = (0, 0, screen_width, screen_height)
     # сгенерируем частицы разного размера
@@ -342,3 +367,53 @@ class Particle(pygame.sprite.Sprite):
         # убиваем, если частица ушла за экран
         if not self.rect.colliderect(self.screen_rect):
             self.kill()
+
+
+# класс принцессы
+class Queen(pygame.sprite.Sprite):
+    def __init__(self, pos_x, pos_y):
+        super().__init__(queen_group)
+        size_x = 20
+        size_y = 40
+        self.pos_x = pos_x
+        self.pox_y = pos_y
+        self.image = pygame.transform.scale(loadimage('queen.png', 'image_data'), (size_x, size_y))
+        self.rect = self.image.get_rect()
+        self.rect.x = pos_x * platform_width
+        self.rect.y = pos_y * platform_height - 6
+
+        self.founded = False
+
+    def update(self):
+        if pygame.sprite.spritecollide(self, player_group, False) and not self.founded:
+            player_group.sprites()[0].winner = True
+            self.founded = True
+
+
+class Secret(pygame.sprite.Sprite):
+    def __init__(self, pos_x, pos_y):
+        super().__init__(secret_group)
+        size_x = 60
+        size_y = 50
+        self.pos_x = pos_x
+        self.pox_y = pos_y
+        self.image = pygame.transform.scale(loadimage('secret_egg_1.png', 'image_data'),
+                                            (size_x, size_y))
+        self.rect = self.image.get_rect()
+        self.rect.x = pos_x * platform_width
+        self.rect.y = pos_y * platform_height - 17
+
+        self.founded = False
+        self.gived = False
+        self.power = 40
+
+    def update(self):
+        if pygame.sprite.spritecollide(self, player_group, False) and not self.founded:
+            self.founded = True
+            Batman_sound.play()
+
+            if not self.gived:
+                player_group.sprites()[0].money += self.power
+                self.gived = True
+        elif not pygame.sprite.spritecollide(self, player_group, False) and self.founded:
+            self.founded = False
