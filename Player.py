@@ -193,6 +193,17 @@ class Player(pygame.sprite.Sprite):
                 -2 < self.yvel < 2 or self.onGround):
             self.anim_run_changed = False
 
+        if 'Down' in self.now_animation and -2 < self.yvel < 2:
+            if 'right' in self.now_animation and self.xvel != 0:
+                self.init_animation(loadimage("run_right.png", 'Sprites'), 8, 1,
+                                    self.rect.x, self.rect.y)
+                self.now_animation = 'Run_right'
+            elif 'left' in self.now_animation and self.xvel != 0:
+                self.init_animation(loadimage("run_left.png", 'Sprites'), 8, 1,
+                                    self.rect.x, self.rect.y)
+                self.now_animation = 'Run_left'
+            self.anim_run_changed = True
+
     # коллизия со стенками
     def collide(self, xvel, yvel):
         for platform in platforms:
