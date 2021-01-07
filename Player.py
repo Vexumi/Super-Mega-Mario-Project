@@ -74,6 +74,7 @@ class Player(pygame.sprite.Sprite):
                 self.frames.append(sheet.subsurface(pygame.Rect(frame_location, self.rect.size)))
 
     def update(self, up, left, right, running):
+        # смена кадра каждые 5 итераций
         if self.iter == 5:
             self.cur_frame = (self.cur_frame + 1) % len(self.frames)
             self.image = self.frames[self.cur_frame]
@@ -303,7 +304,9 @@ class Bullet(pygame.sprite.Sprite):
     def collision(self):
         # пуля пропадает и человек получает урон после соприкосновения
         if player_group.sprites()[0] in pygame.sprite.spritecollide(self, player_group, False):
-            self.kill()
+            global bullet_group
+            for i in bullet_group.sprites():
+                i.kill()
             player_group.sprites()[0].go_die()
             return 'died'
         # пуля пропадает после столкновения с препятствиями

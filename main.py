@@ -107,7 +107,6 @@ def update_sprites(up, left, right, running, background):
     bullet_group.update()
     for sprite in bullet_group:
         camera.apply(sprite)
-    bullet_group.draw(screen)
 
     for event in trigger_group.sprites():  # TODO: смена уровня
         if event.update(all_sprites) == 'New_level_triggered' and now_level != 'level_2':
@@ -133,7 +132,6 @@ def main():
     hp_hero.update(None)
     background = pygame.transform.scale(loadimage('bg_underground.png', 'image_data'),
                                         (screen_width, screen_height))
-
     # основной цикл
     while Exit:
         for event in pygame.event.get():
@@ -161,6 +159,7 @@ def main():
                 if event.button == 1:
                     interface_group.update(event)
         update_sprites(up, left, right, running, background)
+        bullet_group.draw(screen)
         hp_hero.update(None)
         star_group.draw(screen)
         all_sprites.draw(screen)
@@ -198,12 +197,18 @@ if __name__ == "__main__":
     in_game = False
     command = start_menu(game_started)
 
-    if command == 'New Game':
+    if command[0] == 'New Game':
         game_started = False
         now_level = "level_1"
         player_money = 0
         player_hp = 3
         in_game = False
+
+    if command[1]:
+        pygame.mixer.music.unpause()
+        is_music_on = True
+    else:
+        is_music_on = False
 
     # переменные для уровня
     hero, x, y = generate_level(load_level(now_level + '.txt'))

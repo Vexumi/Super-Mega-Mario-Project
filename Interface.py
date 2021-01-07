@@ -43,14 +43,23 @@ class Pause(pygame.sprite.Sprite):
         global winner
         if self.rect.collidepoint(event.pos):
             Pause_sound.play()
-            global game_started, in_game
+            global game_started, in_game, is_music_on
             in_game = True
             game_started = True
             command = start_menu(True)
-            if command == 'New Game':
+            if command[0] == 'New Game':
                 player_group.sprites()[0].money = 0
                 player_group.sprites()[0].go_die()
                 player_group.sprites()[0].hp = 3
+
+            if command[1]:
+                if not is_music_on:
+                    pygame.mixer.music.unpause()
+                    is_music_on = True
+            else:
+                if is_music_on:
+                    pygame.mixer.music.pause()
+                    is_music_on = False
 
 
 # класс создания кнопок в интерфейсе
@@ -79,6 +88,10 @@ class Interface(pygame.sprite.Sprite):
         elif self.type == 'Label':
             self.image = pygame.transform.scale(loadimage('label.png', 'image_data'), (500, 220))
             self.rect = self.image.get_rect().move(int(screen_width / 2) - 250, 75)
+        elif self.type == 'Music':
+            self.image = pygame.transform.scale(loadimage('music_on.png', 'image_data'),
+                                                (70, 70))
+            self.rect = self.image.get_rect().move(5, screen_height - 75)
         menu_interface.append(self)
 
     def update(self, event):
@@ -88,13 +101,21 @@ class Interface(pygame.sprite.Sprite):
             return 'Exit'
         elif self.rect.collidepoint(event.pos) and self.type == 'New_game':
             return 'New Game'
+        elif self.rect.collidepoint(event.pos) and self.type == 'Music':
+            return 'Music'
+
+    def change_image(self, new_image, size):
+        self.image = pygame.transform.scale(loadimage(new_image, 'image_data'), size)
 
 
 # загрузочный экран
 def start_menu(game_started):
-    global interface_group
+    global interface_group, is_music_on, menu_interface
     for sprite in menu_interface_group.sprites():
         sprite.kill()
+    for sprite in menu_interface:
+        sprite.kill()
+    menu_interface = []
     size = screen_width, screen_height
     screen_menu = pygame.display.set_mode(size)
     screen_menu.fill((0, 100, 100))
@@ -104,9 +125,11 @@ def start_menu(game_started):
     if game_started:
         Start = Interface('Start')
     New_game = Interface('New_game')
+    Music = Interface('Music')
     Exit = Interface('Exit')
-    # Settings = Interface("Settings")
-    # Question = Interface('Question')
+    if not is_music_on:
+        Music.change_image('music_off.png', (70, 70))
+    is_music = is_music_on
     FPS = 30
     clock = pygame.time.Clock()
     QUIT = False
@@ -131,18 +154,27 @@ def start_menu(game_started):
                         command = i.update(event)
                         if command == 'Start':
                             Play_sound.play()
-                            return
+                            return '', is_music
                         elif command == 'New Game':
                             for chest in chest_group.sprites():
                                 chest.close_chest()
                             for queen in queen_group:
                                 queen.founded = False
-                            return 'New Game'
+                            return 'New Game', is_music
                         elif command == 'Exit':
                             pygame.mixer.music.stop()
                             Exit_sound.play()
                             pygame.time.wait(80)
                             QUIT = True
+
+                        elif command == 'Music':
+                            if is_music:
+                                Music.change_image('music_off.png', (70, 70))
+                                is_music = False
+                            else:
+                                Music.change_image('music_on.png', (70, 70))
+                                is_music = True
+                            break
         menu_interface_group.draw(screen_menu)
         pygame.display.flip()
         clock.tick(FPS)

@@ -33,6 +33,7 @@ pygame.mixer.init()
 music = pygame.mixer.music.load(load_music('Race to Mars.mp3', 'D:\Git_projects\SMMP\sound_data'))
 pygame.mixer.music.set_volume(0.3)
 pygame.mixer.music.play(-1)
+pygame.mixer.music.pause()
 
 Dead_sound = pygame.mixer.Sound(load_music('dead_sound.mp3', 'sound_data'))
 Jump_sound = pygame.mixer.Sound(load_music('jump_sound.mp3', 'sound_data'))
@@ -44,6 +45,8 @@ Checkpoint_sound = pygame.mixer.Sound(load_music('checkpoint_loaded_sound.mp3', 
 Chest_sound = pygame.mixer.Sound(load_music('get_money_sound.mp3', 'sound_data'))
 Batman_sound = pygame.mixer.Sound(load_music('batman.mp3', 'sound_data'))
 Win_sound = pygame.mixer.Sound(load_music('win_sound.mp3', 'sound_data'))
+
+is_music_on = True
 
 # enemies
 enemies = []
