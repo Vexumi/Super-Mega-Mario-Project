@@ -30,7 +30,7 @@ is_hero_live = True
 
 # Music and Sounds
 pygame.mixer.init()
-music = pygame.mixer.music.load(load_music('Race to Mars.mp3', 'sound_data'))
+music = pygame.mixer.music.load(load_music('Race to Mars.mp3', 'D:\Git_projects\SMMP\sound_data'))
 pygame.mixer.music.set_volume(0.3)
 pygame.mixer.music.play(-1)
 

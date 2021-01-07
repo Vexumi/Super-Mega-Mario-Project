@@ -34,6 +34,40 @@ class Camera:
         global_offset[1] += -(target.rect.y + target.rect.h // 2 - height // 2)
 
 
+def change_level(new_level):
+    global all_sprites, \
+        player_group, \
+        platforms, \
+        platform_group, \
+        now_level, \
+        trigger_group, \
+        chest_group, \
+        enemies_group, \
+        queen_group, \
+        secret_group, \
+        trigger_group, \
+        camera, \
+        level, \
+        level_width, \
+        level_height, hero, x, y
+    all_sprites = pygame.sprite.Group()
+    player_group = pygame.sprite.Group()
+    platform_group = pygame.sprite.Group()
+    trigger_group = pygame.sprite.Group()
+    chest_group = pygame.sprite.Group()
+    enemies_group = pygame.sprite.Group()
+    queen_group = pygame.sprite.Group()
+    secret_group = pygame.sprite.Group()
+    trigger_group = pygame.sprite.Group()
+    platforms = []
+    now_level = new_level
+    level = load_level(now_level + '.txt')
+    level_width = platform_width * len(level[0])
+    level_height = platform_height * len(level)
+    hero, x, y = generate_level(load_level(now_level + '.txt'))
+    camera = Camera(level_width, level_height)
+
+
 # обновление всех спрайтов
 def update_sprites(up, left, right, running, background):
     global hero, now_level, all_sprites, player_group, platforms, platform_group, x, y
@@ -47,34 +81,38 @@ def update_sprites(up, left, right, running, background):
         hero.winner = False
     camera.update(hero)
     hero.update(up, left, right, running)
+
     for i in enemies:
         i.update()
+
     screen.blit(background, (0, 0))
     chest_group.update()
     star_group.update()
+
     for sprite in all_sprites:
         camera.apply(sprite)
+
     for sprite in platform_group:
         camera.apply(sprite)
+
     for sprite in queen_group:
         camera.apply(sprite)
         sprite.update()
+
     for sprite in secret_group:
         camera.apply(sprite)
         sprite.update()
     platform_group.draw(screen)
-    for event in trigger_group.sprites():  # TODO: смена уровня
-        if event.update(all_sprites) == 'New_level_triggered' and now_level != 'level_2':
-            all_sprites = pygame.sprite.Group()
-            player_group = pygame.sprite.Group()
-            platform_group = pygame.sprite.Group()
-            platforms = []
-            now_level = 'level_2'
-            hero, x, y = generate_level(load_level(now_level + '.txt'))
+
     bullet_group.update()
     for sprite in bullet_group:
         camera.apply(sprite)
     bullet_group.draw(screen)
+
+    for event in trigger_group.sprites():  # TODO: смена уровня
+        if event.update(all_sprites) == 'New_level_triggered' and now_level != 'level_2':
+            change_level('level_2')
+            return
 
 
 # основная функция
@@ -161,7 +199,6 @@ if __name__ == "__main__":
     command = start_menu(game_started)
 
     if command == 'New Game':
-        print('New Game Started')
         game_started = False
         now_level = "level_1"
         player_money = 0
