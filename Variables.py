@@ -25,8 +25,8 @@ size = width, height = screen_width, screen_height
 screen = pygame.display.set_mode(size)
 screen.fill(pygame.Color('black'))
 now_level = None
-go_next_lvl = False
 is_hero_live = True
+lvl_name = None
 
 # Music and Sounds
 pygame.mixer.init()
@@ -74,6 +74,17 @@ winner = False
 chest_group = pygame.sprite.Group()
 star_group = pygame.sprite.Group()
 
+buttons_group = pygame.sprite.Group()
+
+
+trigger_to_close = False
+
+file = open('gamer.txt', mode='r', encoding='utf-8')
+data = file.readlines()
+data = [i.rstrip('\n') for i in data]
+for i in data:
+    exec(i)
+file.close()
 
 def init_vars_def():
     a = []

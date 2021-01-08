@@ -2,6 +2,7 @@ import pygame
 from Variables import *
 from Defs import *
 from Player import player_group
+from Platforms import *
 import sys
 
 
@@ -60,6 +61,7 @@ class Pause(pygame.sprite.Sprite):
                 if is_music_on:
                     pygame.mixer.music.pause()
                     is_music_on = False
+            print(now_level)
 
 
 # класс создания кнопок в интерфейсе
@@ -110,7 +112,7 @@ class Interface(pygame.sprite.Sprite):
 
 # загрузочный экран
 def start_menu(game_started):
-    global interface_group, is_music_on, menu_interface
+    global interface_group, is_music_on, menu_interface, now_level, trigger_to_close
     for sprite in menu_interface_group.sprites():
         sprite.kill()
     for sprite in menu_interface:
@@ -138,12 +140,16 @@ def start_menu(game_started):
             if event.type == pygame.QUIT or QUIT:
                 if game_started and in_game:
                     file = open('gamer.txt', mode='w', encoding='utf-8')
-                    file.write('game_started = {}\n'
-                               'now_level = "{}"\n'
-                               'player_money = {}\n'
-                               'player_hp = {}'.format(game_started, now_level,
-                                                       player_group.sprites()[0].money,
-                                                       player_group.sprites()[0].hp))
+                    if player_group.sprites()[0].hp > 0:
+                        file.write('game_started = True\n'
+                                   'now_level = "{}"\n'
+                                   'player_money = {}\n'
+                                   'player_hp = {}'.format(player_group.sprites()[0].now_lvl, player_group.sprites()[0].money, player_group.sprites()[0].hp))
+                    else:
+                        file.write('game_started = False\n'
+                                   'now_level = None\n'
+                                   'player_money = 0\n'
+                                   'player_hp = 3')
                     file.close()
                 pygame.quit()
                 sys.exit()
@@ -236,13 +242,66 @@ def winner_screen():
         clock.tick(FPS)
 
 
+class Button(pygame.sprite.Sprite):
+    def __init__(self, pos, text, size, size_text, text_pos, box_color, text_color,
+                 fill_color=(0, 0, 0)):
+        super().__init__(buttons_group)
+        self.image = pygame.Surface(size)
+        self.image.fill(fill_color)
+        self.rect = self.image.get_rect().move(pos[0], pos[1])
+        displayText(text, text_color, size_text, text_pos, None, self.image)
+        pygame.draw.rect(self.image, box_color, (0, 0, self.rect.width, self.rect.height), 1)
+        self.text = text
+
+    def update(self, event):
+        if self.rect.collidepoint(event.pos):
+            return self.text
+        return None
+
+
+def level_choose():
+    global buttons_group
+    buttons_group = pygame.sprite.Group()
+    levels_list = ['level_1', 'level_2', 'sandbox']
+    now_pos = [200, 200]
+    size = (100, 40)
+    size_text = 30
+    text_pos = (5, 0)
+    box_color = (100, 200, 100)
+    text_color = (255, 255, 0)
+    fill_color = (0, 100, 100)
+    step = 150
+    for level in levels_list:
+        Button(now_pos, level, size, size_text, text_pos, box_color, text_color, fill_color)
+        now_pos[0] += step
+
+    FPS = 20
+    clock = pygame.time.Clock()
+    screen.fill((0, 100, 100))
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return 'Error'
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                for sprite in buttons_group.sprites():
+                    btn = sprite.update(event)
+                    if btn:
+                        return btn
+        displayText('Choose level', (50, 255, 255), 80, (220, 30), None, screen)
+        displayText('Выбор уровня в игре будет недоступен!', (150, 0, 0), 22, (240, 560), None, screen)
+        displayText('Потребуется перезапуск игры.', (150, 0, 0), 22, (280, 600), None, screen)
+        buttons_group.draw(screen)
+        pygame.display.flip()
+        clock.tick(FPS)
+
+
 # отображение текста
-def displayText(text, color, size=50, pos=(100, 100), flag=None):
+def displayText(text, color, size=50, pos=(100, 100), flag=None, sc=screen):
     pygame.font.init()
     font = pygame.font.SysFont('Arial', size)
     textsurface = font.render(str(text), False, color)
-    screen.blit(textsurface, pos)
+    sc.blit(textsurface, pos)
     # отображение счетчика монет есть есть флаг "+coin"
     if flag == '+coin':
         coin = loadimage('coin.png', 'image_data')
-        screen.blit(coin, (screen_width - 35, 13))
+        sc.blit(coin, (screen_width - 35, 13))

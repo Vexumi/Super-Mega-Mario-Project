@@ -11,9 +11,9 @@ platform_image = {
 }
 
 # уровень и переменные для него
-level = load_level('level_1.txt')
-level_width = platform_width * len(level[0])
-level_height = platform_height * len(level)
+#level = load_level('level_1.txt')
+#level_width = platform_width * len(level[0])
+#level_height = platform_height * len(level)
 
 
 # создание платформы для уровня
@@ -27,7 +27,7 @@ class Platform(pygame.sprite.Sprite):
 
 
 # генерация мира
-def generate_level(level):
+def generate_level(level, lvl, money, hp):
     new_player, x, y = None, None, None
     for y in range(len(level)):
         for x in range(len(level[y])):
@@ -36,12 +36,12 @@ def generate_level(level):
             elif level[y][x] == '@':  # создание персонажа
                 if not (game_started):
                     new_player = Player(loadimage("idle_right.png", 'Sprites', (255, 255, 255)), 10,
-                                        1, x * platform_width, y * platform_height, money=0, hp=3)
+                                        1, x * platform_width, y * platform_height, money=0, hp=3, lvl=lvl)
                 else:
                     new_player = Player(loadimage("idle_right.png", 'Sprites', (255, 255, 255)), 10,
                                         1, x * platform_width, y * platform_height,
-                                        money=player_money,
-                                        hp=player_hp)
+                                        money=money,
+                                        hp=hp, lvl=lvl)
             elif level[y][x] == '-':  # создание блока травы
                 Platform('grass', x, y)
             elif level[y][x] == '+':  # создание блока земли

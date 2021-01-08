@@ -73,11 +73,9 @@ def update_sprites(up, left, right, running, background):
     global hero, now_level, all_sprites, player_group, platforms, platform_group, x, y
     if hero.winner:
         winner_screen()
-        command = start_menu(False)
-        if command == 'New Game':
-            hero.money = 0
-            hero.go_die()
-            hero.hp = 3
+        hero.hp = 4
+        hero.money = 0
+        hero.go_die()
         hero.winner = False
     camera.update(hero)
     hero.update(up, left, right, running)
@@ -108,11 +106,6 @@ def update_sprites(up, left, right, running, background):
     for sprite in bullet_group:
         camera.apply(sprite)
 
-    for event in trigger_group.sprites():  # TODO: смена уровня
-        if event.update(all_sprites) == 'New_level_triggered' and now_level != 'level_2':
-            change_level('level_2')
-            return
-
 
 # основная функция
 def main():
@@ -133,6 +126,7 @@ def main():
     background = pygame.transform.scale(loadimage('bg_underground.png', 'image_data'),
                                         (screen_width, screen_height))
     # основной цикл
+    print(now_level)
     while Exit:
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -184,7 +178,7 @@ def main():
                    'player_hp = {}'.format(now_level, hero.money, hero.hp))
     else:
         file.write('game_started = False\n'
-                   'now_level = "level_1"\n'
+                   'now_level = None\n'
                    'player_money = 0\n'
                    'player_hp = 3')
     file.close()
@@ -195,23 +189,29 @@ def main():
 # старт игры
 if __name__ == "__main__":
     in_game = False
-    command = start_menu(game_started)
-
-    if command[0] == 'New Game':
-        game_started = False
-        now_level = "level_1"
-        player_money = 0
-        player_hp = 3
-        in_game = False
-
+    game = game_started
+    while True:
+        command = start_menu(game)
+        if command[0] == 'New Game':
+            game_started = False
+            lvl_name = level_choose()
+            if lvl_name == 'Error':
+                continue
+            now_level = lvl_name
+            player_money = 0
+            player_hp = 3
+            in_game = False
+            break
+        else:
+            break
     if command[1]:
         pygame.mixer.music.unpause()
         is_music_on = True
     else:
         is_music_on = False
-
     # переменные для уровня
-    hero, x, y = generate_level(load_level(now_level + '.txt'))
+    level = load_level(now_level + '.txt')
+    hero, x, y = generate_level(level, now_level, player_money, player_hp)
 
     if command == 'New Game':
         hero.go_die()
@@ -219,13 +219,11 @@ if __name__ == "__main__":
         hero.money = 0
 
     # переменные для камеры
+    level_width = platform_width * len(level[0])
+    level_height = platform_height * len(level)
     camera = Camera(level_width, level_height)
 
     main()
 
     pygame.quit()
     sys.exit()
-game_started = False
-now_level = "level_1"
-player_money = 0
-player_hp = 3

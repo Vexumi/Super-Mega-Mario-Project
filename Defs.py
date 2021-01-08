@@ -16,6 +16,8 @@ def loadimage(name, directory, colorkey=None):
 
 # загрузка мира
 def load_level(filename):
+    global now_level
+    now_level = filename[:-4]
     filename = "level_data/" + filename
     # читаем уровень, убирая символы перевода строки
     with open(filename, 'r') as mapFile:
@@ -32,23 +34,11 @@ def load_music(name, directory):
     fullname = os.path.join(directory, name)
     return fullname
 
-
-file = open('gamer.txt', mode='r', encoding='utf-8')
-data = file.readlines()
-data = [i.rstrip('\n') for i in data]
-for i in data:
-    exec(i)
-file.close()
-
-
-def test():
-    a = []
+def import_gamer():
+    global game_started, now_level, player_money, player_hp
     file = open('gamer.txt', mode='r', encoding='utf-8')
     data = file.readlines()
     data = [i.rstrip('\n') for i in data]
     for i in data:
-        a.append(i)
+        exec(i)
     file.close()
-    return a
-
-

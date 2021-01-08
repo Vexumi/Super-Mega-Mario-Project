@@ -22,11 +22,12 @@ enemy_height = 32
 
 # класс персонажа
 class Player(pygame.sprite.Sprite):
-    def __init__(self, sheet, columns, rows, pos_x, pos_y, money, hp):
+    def __init__(self, sheet, columns, rows, pos_x, pos_y, money, hp, lvl):
         super().__init__(player_group, all_sprites)
         self.money = money
         self.hp = hp
         self.winner = False
+        self.now_lvl = lvl
 
         # инициализация физики персонажа
         self.init_physics(pos_x, pos_y)
@@ -401,7 +402,7 @@ class Queen(pygame.sprite.Sprite):
     def update(self):
         if pygame.sprite.spritecollide(self, player_group, False) and not self.founded:
             player_group.sprites()[0].winner = True
-            self.founded = True
+            #self.founded = True
 
 
 class Secret(pygame.sprite.Sprite):
