@@ -77,6 +77,8 @@ def update_sprites(up, left, right, running, background):
         hero.money = 0
         hero.go_die()
         hero.winner = False
+        for i in chest_group:
+            i.close_chest()
     camera.update(hero)
     hero.update(up, left, right, running)
 
@@ -126,7 +128,6 @@ def main():
     background = pygame.transform.scale(loadimage('bg_underground.png', 'image_data'),
                                         (screen_width, screen_height))
     # основной цикл
-    print(now_level)
     while Exit:
         for event in pygame.event.get():
             if event.type == QUIT:

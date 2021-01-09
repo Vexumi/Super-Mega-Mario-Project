@@ -1,4 +1,4 @@
 game_started = False
 now_level = None
-player_money = 0
+player_money = None
 player_hp = 3

@@ -86,7 +86,7 @@ class Interface(pygame.sprite.Sprite):
             self.rect = self.image.get_rect().move(screen_width - 75, screen_height - 75)
         elif self.type == 'Question':
             self.image = pygame.transform.scale(loadimage('question.png', 'image_data'), (70, 70))
-            self.rect = self.image.get_rect().move(5, screen_height - 75)
+            self.rect = self.image.get_rect().move(screen_width - 75, screen_height - 75)
         elif self.type == 'Label':
             self.image = pygame.transform.scale(loadimage('label.png', 'image_data'), (500, 220))
             self.rect = self.image.get_rect().move(int(screen_width / 2) - 250, 75)
@@ -105,6 +105,9 @@ class Interface(pygame.sprite.Sprite):
             return 'New Game'
         elif self.rect.collidepoint(event.pos) and self.type == 'Music':
             return 'Music'
+        elif self.rect.collidepoint(event.pos) and self.type == 'Question':
+            Question()
+            return
 
     def change_image(self, new_image, size):
         self.image = pygame.transform.scale(loadimage(new_image, 'image_data'), size)
@@ -128,6 +131,7 @@ def start_menu(game_started):
         Start = Interface('Start')
     New_game = Interface('New_game')
     Music = Interface('Music')
+    Question = Interface('Question')
     Exit = Interface('Exit')
     if not is_music_on:
         Music.change_image('music_off.png', (70, 70))
@@ -136,6 +140,7 @@ def start_menu(game_started):
     clock = pygame.time.Clock()
     QUIT = False
     while True:
+        screen.fill((0, 100, 100))
         for event in pygame.event.get():
             if event.type == pygame.QUIT or QUIT:
                 if game_started and in_game:
@@ -144,7 +149,9 @@ def start_menu(game_started):
                         file.write('game_started = True\n'
                                    'now_level = "{}"\n'
                                    'player_money = {}\n'
-                                   'player_hp = {}'.format(player_group.sprites()[0].now_lvl, player_group.sprites()[0].money, player_group.sprites()[0].hp))
+                                   'player_hp = {}'.format(player_group.sprites()[0].now_lvl,
+                                                           player_group.sprites()[0].money,
+                                                           player_group.sprites()[0].hp))
                     else:
                         file.write('game_started = False\n'
                                    'now_level = None\n'
@@ -213,7 +220,8 @@ def died_screen():
 
 def winner_screen():
     Win_sound.play()
-    pygame.mixer.music.pause()
+    if is_music_on:
+        pygame.mixer.music.pause()
     size = screen_width, screen_height
     screen_menu = pygame.display.set_mode(size)
     screen_menu.fill((50, 150, 130))
@@ -225,11 +233,13 @@ def winner_screen():
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.mixer.music.unpause()
+                if is_music_on:
+                    pygame.mixer.music.unpause()
                 Win_sound.stop()
                 return
             elif event.type == pygame.MOUSEBUTTONDOWN or event.type == pygame.KEYDOWN:
-                pygame.mixer.music.unpause()
+                if is_music_on:
+                    pygame.mixer.music.unpause()
                 Win_sound.stop()
                 return
         displayText('You Win!', color=pygame.Color('blue'), size=80,
@@ -288,9 +298,37 @@ def level_choose():
                     if btn:
                         return btn
         displayText('Choose level', (50, 255, 255), 80, (220, 30), None, screen)
-        displayText('Выбор уровня в игре будет недоступен!', (150, 0, 0), 22, (240, 560), None, screen)
+        displayText('Выбор уровня в игре будет недоступен!', (150, 0, 0), 22, (240, 560), None,
+                    screen)
         displayText('Потребуется перезапуск игры.', (150, 0, 0), 22, (280, 600), None, screen)
         buttons_group.draw(screen)
+        pygame.display.flip()
+        clock.tick(FPS)
+
+
+def Question():
+    FPS = 20
+    clock = pygame.time.Clock()
+    text_color = (255, 150, 100)
+    screen.fill((0, 100, 100))
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return
+            if event.type == pygame.KEYDOWN:
+                return
+        displayText('Управление:', text_color, 50, (100, 10))
+        displayText('W - Arrow Up - прыжок', text_color, 25, (110, 70))
+        displayText('A - Arrow Left - влево', text_color, 25, (110, 95))
+        displayText('D - Arrow Right - вправо', text_color, 25, (110, 120))
+
+        displayText('Цель:', text_color, 50, (100, 200))
+        displayText('* Вам нужно добраться до принцессы', text_color, 25, (110, 260))
+        displayText('собрав максимальное количество монет.', text_color, 25, (130, 285))
+        displayText('* У вас есть 3 жизни, после смерти уровень начнется', text_color, 25, (110, 310))
+        displayText('заново и вы потеряете 15 монет.', text_color, 25, (130, 335))
+
+        displayText('|Press any key|', color=text_color, size=20, pos=(335, 450))
         pygame.display.flip()
         clock.tick(FPS)
 

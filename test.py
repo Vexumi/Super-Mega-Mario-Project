@@ -21,52 +21,31 @@ def displayText(text, color, size=50, pos=(100, 100), flag=None, sc=screen):
     sc.blit(textsurface, pos)
 
 
-class Button(pygame.sprite.Sprite):
-    def __init__(self, pos, text, size, size_text, text_pos, box_color, text_color):
-        super().__init__(buttons_group)
-        self.image = pygame.Surface(size)
-        self.rect = self.image.get_rect().move(pos[0], pos[1])
-        displayText(text, text_color, size_text, text_pos, None, self.image)
-        pygame.draw.rect(self.image, box_color, (0, 0, self.rect.width, self.rect.height), 1)
-        self.text = text
-
-    def update(self, event):
-        if self.rect.collidepoint(event.pos):
-            return self.text
-        return None
-
-
-def level_choose():
-    global buttons_group
-    buttons_group = pygame.sprite.Group()
-    levels_list = ['level_1', 'level_2', 'sandbox']
-    now_pos = [200, 200]
-    size = (100, 40)
-    size_text = 30
-    text_pos = (5, 0)
-    box_color = (100, 200, 100)
-    text_color = (255, 255, 0)
-    step = 150
-    for level in levels_list:
-        Button(now_pos, level, size, size_text, text_pos, box_color, text_color)
-        now_pos[0] += step
-
+def Question():
     FPS = 20
     clock = pygame.time.Clock()
+    text_color = (255, 150, 100)
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                for sprite in buttons_group.sprites():
-                    btn = sprite.update(event)
-                    if btn:
-                        return btn + '.txt'
-        displayText('Choose level', (50, 255, 255), 80, (200, 30), None, screen)
-        buttons_group.draw(screen)
+            if event.type == pygame.KEYDOWN:
+                return
+        displayText('Управление:', text_color, 50, (100, 10))
+        displayText('W - Arrow Up - прыжок', text_color, 25, (110, 70))
+        displayText('A - Arrow Left - влево', text_color, 25, (110, 95))
+        displayText('D - Arrow Right - вправо', text_color, 25, (110, 120))
+
+        displayText('Цель:', text_color, 50, (100, 200))
+        displayText('* Вам нужно добраться до принцессы', text_color, 25, (110, 260))
+        displayText('собрав максимальное количество монет.', text_color, 25, (130, 285))
+        displayText('* У вас есть 3 жизни, после смерти уровень начнется', text_color, 25, (110, 310))
+        displayText('заново и вы потеряете 15 монет.', text_color, 25, (130, 335))
+
+        displayText('|Press any key|', color=text_color, size=20, pos=(335, 450))
         pygame.display.flip()
         clock.tick(FPS)
 
 
-print(level_choose())
+Question()
 pygame.quit()
