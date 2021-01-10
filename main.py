@@ -78,7 +78,7 @@ def update_sprites(up, left, right, running, background):
         hero.go_die()
         hero.winner = False
         for i in chest_group:
-            i.close_chest()
+            i.close_chest(1)
     camera.update(hero)
     hero.update(up, left, right, running)
 
@@ -210,6 +210,7 @@ if __name__ == "__main__":
         is_music_on = True
     else:
         is_music_on = False
+        
     # переменные для уровня
     level = load_level(now_level + '.txt')
     hero, x, y = generate_level(level, now_level, player_money, player_hp)

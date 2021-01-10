@@ -34,6 +34,7 @@ def load_music(name, directory):
     fullname = os.path.join(directory, name)
     return fullname
 
+
 def import_gamer():
     global game_started, now_level, player_money, player_hp
     file = open('gamer.txt', mode='r', encoding='utf-8')

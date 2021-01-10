@@ -195,6 +195,9 @@ def start_menu(game_started):
 
 # экран смерти
 def died_screen():
+    global chest_group
+    for sprite in chest_group.sprites():
+        sprite.close_chest()
     Dead_sound.play()
     size = screen_width, screen_height
     screen_menu = pygame.display.set_mode(size)

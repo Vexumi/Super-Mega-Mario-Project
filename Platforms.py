@@ -10,11 +10,6 @@ platform_image = {
     'underground': loadimage('underground.png', 'image_data')
 }
 
-# уровень и переменные для него
-#level = load_level('level_1.txt')
-#level_width = platform_width * len(level[0])
-#level_height = platform_height * len(level)
-
 
 # создание платформы для уровня
 class Platform(pygame.sprite.Sprite):
@@ -36,7 +31,8 @@ def generate_level(level, lvl, money, hp):
             elif level[y][x] == '@':  # создание персонажа
                 if not (game_started):
                     new_player = Player(loadimage("idle_right.png", 'Sprites', (255, 255, 255)), 10,
-                                        1, x * platform_width, y * platform_height, money=0, hp=3, lvl=lvl)
+                                        1, x * platform_width, y * platform_height, money=0, hp=3,
+                                        lvl=lvl)
                 else:
                     new_player = Player(loadimage("idle_right.png", 'Sprites', (255, 255, 255)), 10,
                                         1, x * platform_width, y * platform_height,
@@ -61,7 +57,7 @@ def generate_level(level, lvl, money, hp):
             elif level[y][x] == 'T':
                 Trigger(x, y, platform_width, platform_height,
                         'New_level_triggered')  # триггер для смены уровня
-            elif level[y][x] == 'Q': # создание принцессы
+            elif level[y][x] == 'Q':  # создание принцессы
                 Queen(x, y)
             elif level[y][x] == 'B':
                 Secret(x, y)
