@@ -61,7 +61,6 @@ class Pause(pygame.sprite.Sprite):
                 if is_music_on:
                     pygame.mixer.music.pause()
                     is_music_on = False
-            print(now_level)
 
 
 # класс создания кнопок в интерфейсе
